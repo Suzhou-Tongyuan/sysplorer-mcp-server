@@ -1,7 +1,0 @@
-# 构建 MCP 可执行文件（与 sysplorer-mcp-server 运行态一致）
-pyinstaller>=6.0
-mcp[cli]>=1.0.0
-# mworks.sysplorer 从 Sysplorer site-packages 复制进 venv 后常需此依赖
-websocket-client>=1.0.0
-jsonrpcclient>=4.0.0
-psutil>=5.0.0
