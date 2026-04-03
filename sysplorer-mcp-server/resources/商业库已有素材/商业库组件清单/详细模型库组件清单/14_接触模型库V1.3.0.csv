@@ -1,0 +1,26 @@
+﻿序号,一级类别,模型名,描述
+1.0,PlaneContact,CircleCircle_Contact,圆圆接触模型
+2.0,,CircleLine_Contact,圆和直线接触模型
+3.0,,PolygonPolygon_Contact ,多边形与多边形接触模型
+3.0,PointContact,SphereSphere_Contact,球球接触模型
+4.0,,SphereCylinder_Contact,球和圆柱侧面接触模型
+5.0,,SphereCylinderCone_Contact,球和圆锥侧面接触模型
+6.0,,SphereCone_Contact,球和圆台侧面接触模型
+7.0,,SphereEllipsoid_Contact,球和椭球接触模型
+8.0,,EllipsoidEllipsoid_Contact,椭球和椭球接触模型
+9.0,,EllipsoidCylinder_Contact,椭球和圆柱接触模型
+10.0,,SphereRectangle_Contact,球矩形面接触模型
+11.0,,SphereCircle_Contact,球圆面接触模型
+12.0,,SphereLine_Contact,球和直线接触模型
+13.0,,SphereSpline_Contact,球和样条曲线接触模型
+14.0,,SpherePolygon_Contact,球和多边形面接触模型
+15.0,,SphereCylinderCone_InContact ,球和圆锥内接触模型
+16.0,LineContact,CylinderRectangle_Contact,圆柱与矩形平面接触模型
+17.0,,CylinderCircle_Contact,圆柱与圆形平面接触模型
+18.0,,CylinderCylinder_PointContact,圆柱与圆柱点接触模型
+19.0,,CylinderCylinder_LineContact,圆柱与圆柱线接触模型
+20.0,,CylinderCylinder_CombinedContact,圆柱与圆柱组合接触模型
+21.0,SurfaceContact,RectangleRectangle_Contact,矩形面与矩形面接触模型
+22.0,,CircleRectangle_Contact,圆形面与矩形面接触模型
+23.0,Sensors,ContactSensors,接触检测传感器
+汇总行,24.0,,

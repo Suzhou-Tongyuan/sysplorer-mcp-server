@@ -1,0 +1,40 @@
+﻿序号,类别,介质名,描述,备注
+1.0,Helmholtz,Oxygen,"O2: 简化的Helmholtz理论(Span,2000)",
+2.0,,Nitrogen,"N2: 简化的Helmholtz理论(Span,2000)",
+3.0,,Hydrogen,"H2,Younglove,1982",
+4.0,,Propane,"丙烷: 简化的Helmholtz理论(Span,2000)",
+5.0,,CO2,"CO2,Span-Wagner,1996-基于高精度Helmholtz方程",
+6.0,,R134a,"R134a: 简化的Helmholtz理论(Span,2000)",
+7.0,,R1234yf,"R1234yf,Lemmon/NIST-基于高精度Helmholtz方程",
+8.0,,R404a,"R404a,Lemmon,2003",
+9.0,,R410a,"R410a,Lemmon,2003",
+10.0,,R134a_MBWR,"R134a,Huber&Ely,1994",
+11.0,,Methane,甲烷,1.4.0新增
+12.0,,R32,R32,1.4.0新增
+13.0,CoolProp,He_CoolProp,He_CoolProp,
+14.0,,R22_CoolProp,R22,
+15.0,,Methane_CoolProp,甲烷,
+16.0,Incompressible,LBE,铅铋合金,
+17.0,,Pb,铅,
+18.0,,Bi,铋,
+19.0,,EthyleneGlycolWater,乙二醇水溶液,
+20.0,,PropyleneGlycolWater,丙二醇水溶液,
+21.0,,Na,钠,1.3.0新增
+22.0,,SeaWater,海水,1.3.0新增
+23.0,,Glysantin_30,30%Glysantin冷却液,1.3.1新增
+24.0,,Glysantin_40,40%Glysantin冷却液,1.3.1新增
+25.0,,Glysantin_50,50%Glysantin冷却液,1.3.1新增
+26.0,,Glysantin_60,60%Glysantin冷却液,1.3.1新增
+27.0,Solid,Graphite,"石墨,没有受过辐射",
+28.0,,Steel,不锈钢,
+29.0,,B4C,碳化硼,
+30.0,,UO2,氧化铀,
+31.0,,ZrNb_E125,锆铌合金,
+32.0,,He,氦-极简模型,
+33.0,,Na,固体纳,
+34.0,,Steel_constant,不锈钢_常值,
+35.0,,Steel_400,400型不锈钢,
+36.0,,Steel_316,316型不锈钢,
+37.0,,Steel_304,304型不锈钢,
+38.0,,Aluminum,铝(Al),
+,37种介质（甲烷存在两种实现方式）,,,

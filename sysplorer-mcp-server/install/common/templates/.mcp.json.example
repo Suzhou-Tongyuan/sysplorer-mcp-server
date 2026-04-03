@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "sysplorer_mcp": {
+      "command": "${MCP_COMMAND}",
+      "args": [
+        "--mworks-install-dir",
+        "${MWORKS_INSTALL_DIR}",
+        "--sysplorer-platform-label",
+        "${SYSPLORER_PLATFORM_LABEL}"
+      ]
+    }
+  }
+}

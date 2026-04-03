@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "mworks_mcp": {
+      "command": "C:/Program Files/MWORKS/Sysplorer 2026a/External/python64/python",
+      "args": [
+        "D:/02_programing/09 AI/sysplorer-mcp/sysplorer-mcp-server/main.py",
+        "--mworks-install-dir", "C:/Program Files/MWORKS/Sysplorer 2026a",
+        "--sysplorer-platform-label", "Sysplorer 2026a"
+      ]
+    }
+  }
+}

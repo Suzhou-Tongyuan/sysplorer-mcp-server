@@ -1,0 +1,34 @@
+﻿序号,一级类型,二级类型,模型名,描述
+1.0,/,/,System,系统属性和默认值 (环境，流向，初始化)
+2.0,PEMFC,/,Stack_PolarizationCurve1D,电堆：基于极化曲线
+3.0,,,Stack_Nernst,电堆：基于能斯特方程
+4.0,,,Stack_EquivalentCircuit,电堆：等效电路模型
+5.0,Media,GasMedia,SimpleAir,混合气: N2、O2
+6.0,,,MoistAir,混合气: N2、O2、H2O
+7.0,,,Mix4Gases,混合气: N2、O2、H2O、H2
+8.0,Accessories,Valves,ReducingValve,普通减压阀
+9.0,,,CheckValve,理想单向阀
+10.0,,,Orifice,线性流阻
+11.0,,,ModulatedOrifice,可调节的线性流阻
+12.0,,HydrogenTank,H2Tank,氢气瓶
+13.0,,ChamberVolume,ChamberVolume3p,具有一定体积的流体腔室
+14.0,,,ChamberVolume4p,具有一定体积的流体腔室
+15.0,,,CondenserVolume3p,冷凝器腔室
+16.0,,,CondenserVolume2p,具有一定体积的流体腔室
+17.0,,Condenser,IdealCondenser,理想冷凝器
+18.0,,Humidifier,IdealHumidifier,理想加湿器
+19.0,,Loads,SignalPower,功率器件
+20.0,,Compressor,IdealAirCompressor,理想空气压缩机
+21.0,,,H2RecirculationPump,氢气循环泵
+22.0,,PowerCommand,CompressorSpeedRequest,功率需求
+23.0,Sensors,/,Humidity,相对湿度传感器
+24.0,,,MassFlowRate,质量流量
+25.0,,,Pressure,压力传感器
+26.0,,,Temperature,温度传感器
+27.0,,,Temperature2,温度传感器
+28.0,,,MassFractions,质量分数传感器
+29.0,Sources,/,Boundary_mT,质量流量、温度、组分边界
+30.0,,,Boundary_pT,压力、温度、组分边界
+31.0,,,Fluid_mT,质量、温度边界
+32.0,,,Fluid_pT,压力、温度边界
+汇总行,32.0,,,

@@ -1,0 +1,131 @@
+{
+  "version": "1.0",
+  "last_updated": "2026-03-27T00:00:00Z",
+  "resource_categories": [
+    {
+      "id": "modeling_rules",
+      "name": "建模分流与 Modelica 规范",
+      "description": "搭建/编辑模型时先判别 Modelica 物理模型或 Sysblock 框图；含分流规则、modelica_style_guide、sysblock_style_guide（Run Script）",
+      "path": "modeling_rules/",
+      "index_file": "indexes/modeling_rules_index.json",
+      "supported_extensions": [".md", ".txt"],
+      "query_keywords": [
+        "建模",
+        "搭建模型",
+        "编辑模型",
+        "Modelica",
+        "物理模型",
+        "Sysblock",
+        "框图",
+        "方框图",
+        "EmbeddedCoder",
+        "SysplorerEmbeddedCoder",
+        "分流",
+        "RunScript",
+        "run_script",
+        "mworks_run_script",
+        "mworks_sysplorer_call_code",
+        "modelica_style_guide",
+        "sysblock_style_guide",
+        "NewModel",
+        "ChangeDirectory",
+        "7 Gates",
+        "package.mo",
+        "connect"
+      ],
+      "priority": 1
+    },
+    {
+      "id": "sysblock_model_library",
+      "name": "Sysblock 模块库文档",
+      "description": "Sysblock / SysplorerEmbeddedCoder 各子库模块的中文说明（功能、参数、端口、示例与 *Main 索引），用于查询具体块用法与选型；检索时优先于仅凭参数名列表臆造",
+      "path": "SysblockModelLibrary/",
+      "index_file": "indexes/sysblock_model_library_index.json",
+      "supported_extensions": [".md", ".txt"],
+      "query_keywords": [
+        "Sysblock",
+        "SysblockModelLibrary",
+        "模块库",
+        "块用法",
+        "方框图模块",
+        "EmbeddedCoder",
+        "SysplorerEmbeddedCoder",
+        "Continuous",
+        "Discrete",
+        "SignalRouting",
+        "MathOperation",
+        "LookupTable",
+        "PID",
+        "Integrator",
+        "UnitDelay",
+        "子系统",
+        "端口",
+        "模块说明",
+        "块文档"
+      ],
+      "priority": 2
+    },
+    {
+      "id": "design_opt_mpe_api",
+      "name": "设计优化与MPE工具箱文档",
+      "description": "DesignOptMpe（参数设计、参数估计、参数优化）脚本参考；含 DesignOptMpe.md（接口说明）、参数估计使用说明.md（实操流程与排错）、参数估计demo说明.md 等，供 run_script 与语料检索",
+      "path": "design_opt_mpe_api/",
+      "index_file": "indexes/design_opt_mpe_api_index.json",
+      "supported_extensions": [".py", ".md", ".txt", ".json", ".html"],
+      "query_keywords": [
+        "api",
+        "脚本",
+        "script",
+        "设计优化",
+        "参数估计",
+        "参数优化",
+        "MPE",
+        "DesignOptMpe",
+        "标定",
+        "测量数据",
+        "run_script",
+        "接口",
+        "函数",
+        "调用"
+      ],
+      "priority": 3
+    },
+    {
+      "id": "cad_toolbox_api",
+      "name": "CAD工具箱API文档",
+      "description": "Sysplorer CADToolbox（mworks.sysplorer.CADToolbox）脚本接口说明，与主 ModelingPy ListFunctions 分离；列举与帮助用 cadtool.ListFunctions / help(cadtool.xxx)",
+      "path": "cad_toolbox_api/",
+      "index_file": "indexes/cad_toolbox_api_index.json",
+      "supported_extensions": [".md", ".txt", ".py", ".json", ".html"],
+      "query_keywords": ["CAD", "CADToolbox", "cadtool", "几何", "导入", "脚本", "run_script", "api", "接口", "函数"],
+      "priority": 3
+    },
+    {
+      "id": "simulink_importer_api",
+      "name": "Simulink导入工具箱API文档",
+      "description": "Sysplorer SimulinkImporter（mworks.sysplorer.SimulinkImporter）脚本接口说明；须先 OpenSimulinkImporter 再 ImportSimulinkModel(.slx 路径及可选参数)；列举与帮助用 slximport.ListFunctions / help(slximport.xxx)",
+      "path": "simulink_importer_api/",
+      "index_file": "indexes/simulink_importer_api_index.json",
+      "supported_extensions": [".md", ".txt", ".py", ".json", ".html"],
+      "query_keywords": ["Simulink", "SLX", "SimulinkImporter", "slximport", "导入", "脚本", "run_script", "api", "接口", "函数", "转换"],
+      "priority": 3
+    },
+    {
+      "id": "commercial_library",
+      "name": "商业库已有素材",
+      "description": "商业Modelica库的模型清单、使用说明、组件文档等",
+      "path": "商业库已有素材/",
+      "index_file": "indexes/commercial_library_index.json",
+      "supported_extensions": [".md", ".txt", ".xlsx", ".xls", ".pdf", ".json"],
+      "query_keywords": ["商业库", "commercial", "模型清单", "组件列表", "使用说明", "素材", "library"],
+      "priority": 4
+    }
+  ],
+  "default_sources": [
+    "modeling_rules",
+    "design_opt_mpe_api",
+    "cad_toolbox_api",
+    "simulink_importer_api",
+    "commercial_library"
+  ]
+}

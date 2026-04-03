@@ -1,0 +1,6 @@
+﻿序号,一级类别,模型名,描述
+1.0,/,ModalBeam,模态梁
+2.0,/,ModalBody,柔性体
+3.0,Utilities,ReadMnfNum,读取Mnf文件信息数组长度
+4.0,Utilities,ReadMnfInfo,读取Mnf文件参数信息
+汇总行,4.0,,

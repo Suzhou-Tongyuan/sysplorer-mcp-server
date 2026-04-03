@@ -1,0 +1,14 @@
+{
+  "mcp": {
+    "sysplorer_mcp": {
+      "type": "local",
+      "command": [
+        "${MCP_COMMAND}",
+        "--mworks-install-dir",
+        "${MWORKS_INSTALL_DIR}",
+        "--sysplorer-platform-label",
+        "${SYSPLORER_PLATFORM_LABEL}"
+      ]
+    }
+  }
+}

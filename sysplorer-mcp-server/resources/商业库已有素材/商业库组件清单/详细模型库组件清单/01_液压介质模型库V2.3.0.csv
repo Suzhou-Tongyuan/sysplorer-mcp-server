@@ -1,0 +1,68 @@
+﻿序号,类别,模型/牌号,,,液压油插值表油液介质牌号
+1.0,液压油,常特性,,,5w30牌号油液
+2.0,,基于插值表油液,,,MIL-H-5606牌号油液
+3.0,,高级油液,,,MIL-H-8446牌号油液
+4.0,,基础油液,,,MIL-H-27601牌号油液
+5.0,,简单油液,,,MIL-H-83282牌号油液
+6.0,热液压油,0W30牌号,,,Skydrol_500B-4牌号油液
+7.0,,5W30牌号,,,Skydrol_LD_4牌号油液
+8.0,,15W30牌号,,,0w30牌号油液
+9.0,,15W40牌号,,,15W30牌号油液
+10.0,,AS1241_V牌号,,,15W40牌号油液
+11.0,,AV-gas牌号,,,AS1241 - V牌号油液
+12.0,,D40_hydrocarbon-fluid牌号,,,EG20_W80牌号油液
+13.0,,dea_summer_diesel牌号,,,EG20_W60牌号油液
+14.0,,disel50_rme50牌号,,,EG20_W50牌号油液
+15.0,,disel80_rme20牌号,,,EG20_W40牌号油液
+16.0,,disel80_sme20牌号,,,EG20_W20牌号油液
+17.0,,DME牌号,,,ISO_VG 32_Mobil_DTE_24牌号油液
+18.0,,ethanol牌号,,,ISO_VG 46_Mobil_DTE_25牌号油液
+19.0,,ethanol_gasoline_blend_E24牌号,,,ISO_VG 46_Mobil_DTE_Medium牌号油液
+20.0,,heptane牌号,,,ISO_VG 68_Mobil_DTE_26牌号油液
+21.0,,hexane牌号,,,jet-A牌号油液
+22.0,,高密度柴油,,,jet-A1牌号油液
+23.0,,ISO_VG_32_Mobil DTE_24牌号,,,jet-B牌号油液
+24.0,,ISO_VG_46_Mobil DTE_25牌号,,,JP-4牌号油液
+25.0,,ISO_VG_46_Mobil DTE_Medium牌号,,,JP-10牌号油液
+26.0,,ISO_VG_68_Mobil DTE_26牌号,,,hexane牌号油液
+27.0,,ISO4113牌号,,,heptane牌号油液
+28.0,,jetA牌号,,,MIL_PRF_7808牌号油液
+29.0,,jetA1牌号,,,MIL_PRF_23699牌号油液
+30.0,,jetB牌号,,,pure_ethylene glycol牌号油液
+31.0,,JIS_No2_diesel牌号,,,unleaded gasoline Premium牌号油液
+32.0,,JIS_Special_No3_diesel牌号,,,unleaded gasoline Super Plus牌号油液
+33.0,,JP_4牌号,,,ethanol gasoline blend E24牌号油液
+34.0,,JP_5牌号,,,D40 hydrocarbon fluid牌号油液
+35.0,,JP_7牌号,,,methanol牌号油液
+36.0,,JP_8牌号,,,ethanol牌号油液
+37.0,,JP_10牌号,,,pure_water介质
+38.0,,JP_TS牌号,,,simple_coolant介质
+39.0,,methanol牌号,,,tractor_transmission_oil介质
+40.0,,MIL-H-5606牌号,,,
+41.0,,MIL-H-8446牌号,,,
+42.0,,MIL-H-27601牌号,,,
+43.0,,MIL-H-83282牌号,,,
+44.0,,MIL-H-87257牌号,,,
+45.0,,MIL-H-7808牌号,,,
+46.0,,MIL-H-23699牌号,,,
+47.0,,princeton牌号,,,
+48.0,,rme_diesel牌号,,,
+49.0,,RT牌号,,,
+50.0,,shell_cpu_diesel牌号,,,
+51.0,,shell_hcu_diesel牌号,,,
+52.0,,Skydrol_500B-4牌号,,,
+53.0,,Skydrol_LD-4牌号,,,
+54.0,,Swedish_diesel牌号,,,
+55.0,,TS-1牌号,,,
+56.0,,unleaded_gasoline_Premium牌号,,,
+57.0,,unleaded_gasoline_Super_Plus牌号,,,
+58.0,,纯水,,,
+59.0,,乙二醇,,,
+60.0,,乙烯乙二醇,,,
+61.0,,EG20W80冷却液,,,
+62.0,,EG40W60冷却液,,,
+63.0,,EG50W50冷却液,,,
+64.0,,EG60W40冷却液,,,
+65.0,,EG80W20冷却液,,,
+66.0,,用户自定义介质,,,
+汇总行,66.0,,,,

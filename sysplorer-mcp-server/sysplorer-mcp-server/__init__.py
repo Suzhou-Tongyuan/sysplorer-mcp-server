@@ -1,0 +1,2 @@
+"""MWorks MCP server package."""
+
