@@ -1,8 +1,8 @@
-# Sysplorer MCP Server
+# sysplorer-mcp-server
 ---
 &nbsp;
 
-`Sysplorer MCP Server` 是面向 MCP 协议的 Sysplorer API 服务化能力封装层。它将 Sysplorer 中的关键对象与关键能力，以标准化方式开放给 AI 客户端。装备工程智能体、企业 AI 助手，以及 Claude、Opencode、Codex 等通用 AI 客户端，都可以通过 MCP 协议连接 Sysplorer，读取系统模型上下文，并在授权范围内调用 Sysplorer 相关能力。
+`sysplorer-mcp-server` 是面向 MCP 协议的 Sysplorer API 服务化能力封装层。它将 Sysplorer 中的关键对象与关键能力，以标准化方式开放给 AI 客户端。装备工程智能体、企业 AI 助手，以及 Claude、Opencode、Codex 等通用 AI 客户端，都可以通过 MCP 协议连接 Sysplorer，读取系统模型上下文，并在授权范围内调用 Sysplorer 相关能力。
 
 `Sysplorer MCP Server` 的核心作用，是把原本依赖本地软件环境才能完成的模型操作和知识检索能力，以 MCP 工具的形式开放给客户端调用。
 
