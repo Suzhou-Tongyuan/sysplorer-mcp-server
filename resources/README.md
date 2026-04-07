@@ -22,8 +22,8 @@ resources/
 │   └── CADToolbox.md 等，供 run_script 中 `cadtool.ListFunctions()` / `help(cadtool.xxx)` 的补充说明与检索
 ├── simulink_importer_api/     # Simulink 导入（SimulinkImporter）API 说明
 │   └── SimulinkImporter.md 等，`slximport.ListFunctions()` / `help(slximport.xxx)` 的补充说明与检索
-├── SysplorerAPI/              # （可选）本地 API 说明 Markdown；**未**列入 RAG 清单，请用 MCP `mworks_sysplorer_get_api_document` 等工具
-├── private_lib/               # （可选）随包示例；**未**列入 RAG；工程内真实 `private_lib/` 在工作区根，读 `MetaDataLib.json` + `mworks_sysplorer_get_lib_model_document`
+├── SysplorerAPI/              # （可选）本地 API 说明 Markdown；**未**列入 RAG 清单，请用 MCP `get_api_document` 等工具
+├── private_lib/               # （可选）随包示例；**未**列入 RAG；工程内真实 `private_lib/` 在工作区根，读 `MetaDataLib.json` + `get_lib_model_document`
 ├── 商业库已有素材/             # 商业Modelica库素材
 │   └── 商业库的模型清单、组件列表、使用说明、文档资料等
 ├── modelica_libraries/        # 公共Modelica模型库（可选）
@@ -53,16 +53,16 @@ resources/
 1. **添加新资源**：将对应文件放入相应目录即可，AI会自动识别并在需要时构建索引
 2. **更新资源**：修改文件后，下次搜索时会自动检测变更并重建索引
 3. **新增资源类别**：在`resources_manifest.json`中添加新的类别配置
-4. **手动重建索引**：调用 `mworks_sysplorer_resources_retrieval(action="search", ...)` 时设置 `rebuild_index=true` 即可
+4. **手动重建索引**：调用 `resources_retrieval(action="search", ...)` 时设置 `rebuild_index=true` 即可
 
 ## 搜索规则
 
 AI会根据用户查询内容自动选择最合适的资源类别：
-- 用户要**搭建/编辑模型**时 → 先读 `modeling_rules/modeling_path_router.md`，再按需检索 `modeling_rules`；**Sysplorer Python API** 说明请用 **`mworks_sysplorer_get_api_document`**，**已加载库模型类文档**请用 **`mworks_sysplorer_get_lib_model_document`**
+- 用户要**搭建/编辑模型**时 → 先读 `modeling_rules/modeling_path_router.md`，再按需检索 `modeling_rules`；**Sysplorer Python API** 说明请用 **`get_api_document`**，**已加载库模型类文档**请用 **`get_lib_model_document`**
 - Sysblock **块用法** → 检索语料 **`sysblock_model_library`**（须显式指定 `sources` / 专用索引，见 `modeling_path_router.md`）
 - 查询包含「参数估计」「参数优化」「MPE」「DesignOptMpe」或「API」「脚本」「run_script」等 → 搜索 `design_opt_mpe_api`（优先可读 **`design_opt_mpe_api/参数估计使用说明.md`**）；**CAD 工具箱**相关 → 搜索 `cad_toolbox_api`；**Simulink 导入 / SLX** → 搜索 `simulink_importer_api`
 - 查询包含"商业库"、"模型清单"等关键词 → 搜索 `商业库已有素材`
-- **私有库元数据 / 组件选型** → 使用工作区 **`private_lib/MetaDataLib.json`** 列出候选 **`fqname`**，再 **`mworks_sysplorer_get_lib_model_document`** 拉取 Sysplorer 类文档；**不**再通过本目录 `resources/private_lib/` 做 RAG
+- **私有库元数据 / 组件选型** → 使用工作区 **`private_lib/MetaDataLib.json`** 列出候选 **`fqname`**，再 **`get_lib_model_document`** 拉取 Sysplorer 类文档；**不**再通过本目录 `resources/private_lib/` 做 RAG
 - 其他业务相关查询 → 按 `default_sources` 与清单优先级搜索
 
 ## 注意事项

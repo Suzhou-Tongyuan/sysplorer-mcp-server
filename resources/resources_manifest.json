@@ -24,7 +24,7 @@
         "RunScript",
         "run_script",
         "mworks_run_script",
-        "mworks_sysplorer_call_code",
+        "call_code",
         "modelica_style_guide",
         "sysblock_style_guide",
         "NewModel",

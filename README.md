@@ -1,8 +1,8 @@
-# sysplorer-mcp-server
+# Sysplorer MCP Server
 ---
 &nbsp;
 
-`sysplorer-mcp-server` 是面向 MCP 协议的 Sysplorer API 服务化能力封装层。它将 Sysplorer 中的关键对象与关键能力，以标准化方式开放给 AI 客户端。装备工程智能体、企业 AI 助手，以及 Claude、Opencode、Codex 等通用 AI 客户端，都可以通过 MCP 协议连接 Sysplorer，读取系统模型上下文，并在授权范围内调用 Sysplorer 相关能力。
+`Sysplorer MCP Server` 是面向 MCP 协议的 Sysplorer API 服务化能力封装层。它将 Sysplorer 中的关键对象与关键能力，以标准化方式开放给 AI 客户端。装备工程智能体、企业 AI 助手，以及 Claude、Opencode、Codex 等通用 AI 客户端，都可以通过 MCP 协议连接 Sysplorer，读取系统模型上下文，并在授权范围内调用 Sysplorer 相关能力。
 
 `Sysplorer MCP Server` 的核心作用，是把原本依赖本地软件环境才能完成的模型操作和知识检索能力，以 MCP 工具的形式开放给客户端调用。
 
@@ -89,7 +89,7 @@ Sysplorer MCP Server 共提供 13 个工具，覆盖 Sysplorer 的启动、建�
   </thead>
   <tbody>
     <tr>
-      <td><code>mworks_sysplorer_session_manager</code></td>
+      <td><code>session_manager</code></td>
       <td>会话管理工具</td>
       <td>用于启动、连接、探测、重连和关闭 Sysplorer 会话，是所有后续工具调用的基础入口。</td>
     </tr>
@@ -113,32 +113,32 @@ Sysplorer MCP Server 共提供 13 个工具，覆盖 Sysplorer 的启动、建�
   </thead>
   <tbody>
     <tr>
-      <td><code>mworks_sysplorer_load_library</code></td>
+      <td><code>load_library</code></td>
       <td>库加载工具</td>
       <td>用于加载 Modelica 标准库或商业库，为后续打开模型、查询类文档和仿真准备运行环境。</td>
     </tr>
     <tr>
-      <td><code>mworks_sysplorer_model_manager</code></td>
+      <td><code>model_manager</code></td>
       <td>模型管理工具</td>
       <td>用于执行模型打开、新建、加载文件、卸载、保存、导出原理图，以及组件、端口和类文本等内省查询。</td>
     </tr>
     <tr>
-      <td><code>mworks_sysplorer_check_model</code></td>
+      <td><code>check_model</code></td>
       <td>模型检查工具</td>
       <td>用于对一个或多个模型执行实例化和编译检查，可结合 Smart Layout 写回与重载流程做建模前校验。</td>
     </tr>
     <tr>
-      <td><code>mworks_sysplorer_translate_model</code></td>
+      <td><code>translate_model</code></td>
       <td>模型翻译工具</td>
       <td>用于调用 TranslateModel 完成代码生成与翻译流程，可用于生成仿真代码或后续部署所需的中间结果。</td>
     </tr>
     <tr>
-      <td><code>mworks_sysplorer_simulate_model</code></td>
+      <td><code>simulate_model</code></td>
       <td>模型仿真工具</td>
       <td>用于执行自动、独立或实时仿真，并在仿真后校验结果变量是否可读取，是模型运行阶段的核心入口。</td>
     </tr>
           <tr>
-      <td><code>mworks_sysplorer_smart_layout</code></td>
+      <td><code>smart_layout</code></td>
       <td>自动布局工具</td>
       <td>用于计算布局、整合生成结果并将 Placement 和连线信息写回系统级 <code>.mo</code> 文件，适合自动建模后的版式整理。</td>
     </tr>
@@ -163,7 +163,7 @@ Sysplorer MCP Server 共提供 13 个工具，覆盖 Sysplorer 的启动、建�
   </thead>
   <tbody>
     <tr>
-      <td><code>mworks_sysplorer_call_code</code></td>
+      <td><code>call_code</code></td>
       <td>脚本调用工具</td>
       <td>用于执行 <code>run_script</code>、异步任务、就绪分派和 CAD 工具箱等能力，其中 <code>mode=&quot;run_script&quot;</code> 是 Sysblock 程序化建图和脚本化操作的重要入口。</td>
     </tr>
@@ -188,17 +188,17 @@ Sysplorer MCP Server 共提供 13 个工具，覆盖 Sysplorer 的启动、建�
   </thead>
   <tbody>
     <tr>
-      <td><code>mworks_sysplorer_resources_retrieval</code></td>
+      <td><code>resources_retrieval</code></td>
       <td>资源检索工具</td>
       <td>用于检索 <code>resources/</code> 中的规则、案例和语料，适合查询流程建议、选型经验、排障知识和示例资料。</td>
     </tr>
     <tr>
-      <td><code>mworks_sysplorer_get_api_document</code></td>
+      <td><code>get_api_document</code></td>
       <td>接口文档工具</td>
       <td>用于查询 Sysplorer Python API 的帮助说明，适合确认命令名、参数含义和官方接口用法。</td>
     </tr>
     <tr>
-      <td><code>mworks_sysplorer_get_lib_model_document</code></td>
+      <td><code>get_lib_model_document</code></td>
       <td>模型库文档工具</td>
       <td>用于查询已加载库模型类的真实说明、参数、端口和导出文档内容，适合核对组件级上下文。</td>
     </tr>
@@ -222,18 +222,17 @@ Sysplorer MCP Server 共提供 13 个工具，覆盖 Sysplorer 的启动、建�
   </thead>
   <tbody>
     <tr>
-      <td><code>mworks_sysplorer_result_manager</code></td>
+      <td><code>result_manager</code></td>
       <td>结果读取工具</td>
       <td>用于打开结果文件、列出变量、读取时序数据、读取指定时刻值以及获取时间轴信息。</td>
     </tr>
     <tr>
-      <td><code>mworks_sysplorer_plot_manager</code></td>
+      <td><code>plot_manager</code></td>
       <td>绘图动画工具</td>
       <td>用于在 Sysplorer 中执行结果绘图与动画创建，支持变量可视化和动态展示。</td>
     </tr>
   </tbody>
 </table>
-
 ## 许可证
 
-本项目采用 MIT 许可证授权，有关详细信息，请参阅 [LICENSE](https://mohub.net/mcp/26004/file/%E6%9C%80%E6%96%B0/blob/LICENSE) 文件。 
+本项目采用 MIT 许可证授权，有关详细信息，请参阅 LICENSE 文件。 

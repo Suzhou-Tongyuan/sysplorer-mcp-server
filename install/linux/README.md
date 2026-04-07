@@ -25,7 +25,7 @@ Because of those dependencies, the Linux package is **limited support**, not ful
 ## What It Does Not Promise
 
 - no Sysplorer-backed simulation workflow on Linux
-- no claim that `mworks_sysplorer_session_manager` or modeling tools will succeed on Linux
+- no claim that `session_manager` or modeling tools will succeed on Linux
 - no claim of Sysplorer feature parity with Windows even though a native Linux binary is produced
 
 ## Scripts
@@ -197,7 +197,7 @@ Suggested checks:
 
 These outcomes are currently acceptable on Linux:
 
-- [ ] `mworks_sysplorer_session_manager` may fail because `mworks.sysplorer` is unavailable
+- [ ] `session_manager` may fail because `mworks.sysplorer` is unavailable
 - [ ] Sysplorer/model/simulation tools may fail because the runtime is Windows-dependent
 - [ ] failures mentioning `tasklist`, `wmic`, `taskkill`, `mworks.sysplorer`, or `MWSolver.exe` are consistent with the current support boundary
 
