@@ -233,6 +233,7 @@ Sysplorer MCP Server 共提供 13 个工具，覆盖 Sysplorer 的启动、建�
     </tr>
   </tbody>
 </table>
+
 ## 许可证
 
 本项目采用 MIT 许可证授权，有关详细信息，请参阅 LICENSE 文件。 
