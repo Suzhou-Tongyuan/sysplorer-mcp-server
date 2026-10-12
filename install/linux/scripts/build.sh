@@ -30,7 +30,7 @@ find "$DIST_DIR" -mindepth 1 -exec rm -rf -- {} +
 rm -rf "$WORK_PATH/sysplorer_mcp_server" "$WORK_PATH/mworks_mcp_server"
 rm -f "$EXE_SOURCE" "$LEGACY_EXE_SOURCE"
 
-# 与 Windows build.ps1 一致：version_base 来自 install/package_version.json，内部版为 0.5.x（x = git 提交数）
+# 与 Windows build.ps1 一致：version_base 来自 install/package_version.json，内部版为 0.6.x（x = git 提交数）
 "$PYTHON_BIN" "$REPO_ROOT/install/write_build_meta.py" --repo-root "$REPO_ROOT" --mode internal
 
 "$PYTHON_BIN" -m PyInstaller --noconfirm --clean --distpath "$DIST_ROOT" --workpath "$WORK_PATH" "$SPEC_PATH"

@@ -119,7 +119,7 @@ write_all_client_configs() {
   local opencode_dir="$HOME/.config/opencode"
   local opencode="$opencode_dir/opencode.json"
   local codex="$HOME/.codex/config.toml"
-  local modelex="$HOME/.modelex/mcp.json"
+  local mogick="$HOME/.mworks/mogick/Sysplorer/mcp.json"
 
   export MCP_INSTALL_MODE="$mode"
   export MCP_MWORKS_DIR="$mworks"
@@ -127,7 +127,7 @@ write_all_client_configs() {
   export MCP_CLAUDE="$claude"
   export MCP_OPENCODE="$opencode"
   export MCP_CODEX="$codex"
-  export MCP_MODELEX="$modelex"
+  export MCP_MOGICK="$mogick"
 
   if [ "$mode" = "source" ]; then
     export MCP_PYTHON="$4"
@@ -136,7 +136,7 @@ write_all_client_configs() {
     export MCP_LAUNCHER="$4"
   fi
 
-  mkdir -p "$opencode_dir" "$HOME/.codex" "$HOME/.modelex"
+  mkdir -p "$opencode_dir" "$HOME/.codex" "$HOME/.mworks/mogick/Sysplorer"
 
   python3 - <<'PY'
 import json
@@ -227,10 +227,10 @@ ld_library_path_bin64 = str(pathlib.Path(mworks) / "bin64") + ":$LD_LIBRARY_PATH
 claude_p = pathlib.Path(os.environ["MCP_CLAUDE"])
 opencode_p = pathlib.Path(os.environ["MCP_OPENCODE"])
 codex_p = pathlib.Path(os.environ["MCP_CODEX"])
-modelex_p = pathlib.Path(os.environ["MCP_MODELEX"])
+mogick_p = pathlib.Path(os.environ["MCP_MOGICK"])
 
 
-def write_modelex_json(path: pathlib.Path, command_list: list[str]) -> None:
+def write_mogick_json(path: pathlib.Path, command_list: list[str]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     data = load_json(path)
     servers = data.setdefault("servers", {})
@@ -297,8 +297,8 @@ if mode == "source":
             label,
         ],
     )
-    write_modelex_json(
-        modelex_p,
+    write_mogick_json(
+        mogick_p,
         [
             py,
             main_res,
@@ -354,8 +354,8 @@ else:
             label,
         ],
     )
-    write_modelex_json(
-        modelex_p,
+    write_mogick_json(
+        mogick_p,
         [
             launcher_res,
             "--mworks-install-dir",
@@ -397,7 +397,7 @@ sync_agent_modeling_skills() {
     printf '[WARN] python3 not found; skip agent skills sync.\n' >&2
     return 0
   fi
-  printf '\nSyncing bundled modeling_skills to OpenCode and Modelex global skills directories ...\n'
+  printf '\nSyncing bundled modeling_skills to OpenCode and Mogick global skills directories ...\n'
   python3 "$silent_py" --sync-opencode-skills --bundle-root "$SCRIPT_DIR" || printf '[WARN] agent skills sync exited with errors.\n' >&2
 }
 
@@ -483,7 +483,7 @@ if [ "$INSTALL_MODE" = "source" ]; then
   backup_if_exists "$HOME/.claude.json"
   backup_if_exists "$HOME/.config/opencode/opencode.json"
   backup_if_exists "$HOME/.codex/config.toml"
-  backup_if_exists "$HOME/.modelex/mcp.json"
+  backup_if_exists "$HOME/.mworks/mogick/Sysplorer/mcp.json"
   printf '\n'
 
   if ! command -v python3 >/dev/null 2>&1; then
@@ -495,7 +495,7 @@ if [ "$INSTALL_MODE" = "source" ]; then
   printf 'Claude configuration updated: %s\n' "$HOME/.claude.json"
   printf 'OpenCode configuration updated: %s\n' "$HOME/.config/opencode/opencode.json"
   printf 'Codex configuration updated: %s\n' "$HOME/.codex/config.toml"
-  printf 'Modelex configuration updated: %s\n' "$HOME/.modelex/mcp.json"
+  printf 'Mogick configuration updated: %s\n' "$HOME/.mworks/mogick/Sysplorer/mcp.json"
 
   sync_agent_modeling_skills
 
@@ -540,14 +540,14 @@ else
   backup_if_exists "$HOME/.claude.json"
   backup_if_exists "$HOME/.config/opencode/opencode.json"
   backup_if_exists "$HOME/.codex/config.toml"
-  backup_if_exists "$HOME/.modelex/mcp.json"
+  backup_if_exists "$HOME/.mworks/mogick/Sysplorer/mcp.json"
   printf '\n'
 
   write_all_client_configs "binary" "$mworks_dir" "$platform_label" "$launcher_path"
   printf 'Claude configuration updated: %s\n' "$HOME/.claude.json"
   printf 'OpenCode configuration updated: %s\n' "$HOME/.config/opencode/opencode.json"
   printf 'Codex configuration updated: %s\n' "$HOME/.codex/config.toml"
-  printf 'Modelex configuration updated: %s\n' "$HOME/.modelex/mcp.json"
+  printf 'Mogick configuration updated: %s\n' "$HOME/.mworks/mogick/Sysplorer/mcp.json"
 
   sync_agent_modeling_skills
 fi

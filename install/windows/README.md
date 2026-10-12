@@ -13,7 +13,7 @@
 
 ## 安装方式
 
-安装 Sysplorer 时会自动安装 Sysplorer MCP Server，默认给Claude code、OpenCode、Codex 三 类 agent 配置。如果失败可以参考以下方式手动执行。
+配套安装器为 Claude Code、OpenCode、Codex、Mogick 四类客户端写入 Sysplorer MCP Server 配置。若当前安装环境尚未完成配置，可按以下方式手动执行。
 
 当需要手动安装 sysplorer mcp 服务时，可以通过“<Sysplorer安装目录>/Tools/sysplorer_mcp”内的 “install_mcp.ps1” 一键安装 Windows Sysplorer MCP Server、“install_mcp.sh” 一键安装 Linux Sysplorer MCP Server。
 
@@ -37,45 +37,45 @@ Python 与依赖环境说明
 
 - **解释器**：必须使用 **当前所选 Sysplorer 安装目录** 下的 `External\python64\python.exe`，以保证与 `mworks.sysplorer` 等接口一致。如需使用自定义Python，请确保安装了 Sysplorer Python API 及 MCP 库。
 
-- **Python 包**：服务端依赖 **`mcp`** 以及 **`fastmcp`、`anyio`** 等（与仓库 `sysplorer-mcp-server` 要求一致）。安装脚本在写配置结束后会执行一次 **`python.exe -m pip list`**，检查是否存在名为 **`mcp`** 的包；若缺失，会提示使用 **PowerShell** 下正确的调用方式安装（路径含空格时必须使用 **`&`**）：
+- **Python 包**：服务端使用 **`mcp` 1.x** 包内的 `mcp.server.fastmcp`，无需独立的 `fastmcp` 包；完整依赖见 `sysplorer-mcp-server/requirements.txt`。安装脚本在写配置结束后会执行一次 **`python.exe -m pip list`**，检查是否存在名为 **`mcp`** 的包；若缺失，会提示使用 **PowerShell** 下正确的调用方式安装（路径含空格时必须使用 **`&`**）：
 
   ```powershell
-  & "C:\你的\Sysplorer\根目录\External\python64\python.exe" -m pip install mcp
+  & "C:\你的\Sysplorer\根目录\External\python64\python.exe" -m pip install "mcp>=1.26.0,<2"
   ```
 
 - 在 **PowerShell** 中切勿仅输入 `"...\python.exe" -m pip ...`（会被解析为字符串而非启动程序），必须使用 **`& "路径\python.exe" -m pip ...`**。
 
-3. 脚本会自动将 MCP 配置添加到 Claude、OpenCode、Codex 的配置文件中  
-4. 脚本还会将本包内的 **`resources/modeling_skills`** 同步到 OpenCode 全局技能目录 **`%USERPROFILE%\.config\opencode\skills\`** 与 Modelex 全局技能目录 **`%USERPROFILE%\.modelex\skills\`**（每个技能为一级子目录，内含 `SKILL.md`）。同步时**仅按随包白名单**删除同名旧目录后整包复制，**不会**清空整个 `skills` 根目录。若需跳过，安装前设置环境变量 **`NO_SYNC_OPENCODE_SKILLS=1`**；静默安装可使用 **`python install/install_mcp_silent.py ... --no-sync-opencode-skills`**。  
-5. 重启 Claude Code / OpenCode / Codex 客户端即可使用
+3. 脚本会自动将 MCP 配置添加到 Claude、OpenCode、Codex、Mogick 的配置文件中
+4. 脚本还会将本包内的 **`resources/modeling_skills`** 同步到 OpenCode 全局技能目录 **`%USERPROFILE%\.config\opencode\skills\`** 与 Mogick 全局技能目录 **`%USERPROFILE%\.mworks\mogick\Sysplorer\skills\`**（每个技能为一级子目录，内含 `SKILL.md`）。同步时**仅按随包白名单**删除同名旧目录后整包复制，**不会**清空整个 `skills` 根目录。若需跳过，安装前设置环境变量 **`NO_SYNC_OPENCODE_SKILLS=1`**；静默安装可使用 **`python install/install_mcp_silent.py ... --no-sync-opencode-skills`**。
+5. 重启 Claude Code / OpenCode / Codex / Mogick 客户端即可使用
 
 如果一键部署脚本运行失败，也可以手动配置。
 
 #### Claude Code（JSON）
 
-- **文件**：`%USERPROFILE%\.claude.json`  
-- **节点**：`mcpServers.sysplorer`  
-- **本包（Python 布局）典型形态**：  
-  - `command`：`Sysplorer` 的 `External\python64\python.exe` 绝对路径  
+- **文件**：`%USERPROFILE%\.claude.json`
+- **节点**：`mcpServers.sysplorer`
+- **本包（Python 布局）典型形态**：
+  - `command`：`Sysplorer` 的 `External\python64\python.exe` 绝对路径
   - `args`：`["<本包main.py绝对路径>", "--mworks-install-dir", "<Sysplorer根目录>", "--sysplorer-platform-label", "<标签>"]`
 
 #### OpenCode（JSON）
-- **文件**：`%USERPROFILE%\.config\opencode\opencode.json`  
-- **节点**：`mcp.sysplorer`  
+- **文件**：`%USERPROFILE%\.config\opencode\opencode.json`
+- **节点**：`mcp.sysplorer`
 - **字段**：`type` 一般为 `local`；`command` 为数组，首元素为 `python.exe`，其后为 `main.py` 路径及与上相同的参数。
 
 #### Codex（TOML）
-- **文件**：`%USERPROFILE%\.codex\config.toml`  
+- **文件**：`%USERPROFILE%\.codex\config.toml`
 - **节名**：`[mcp_servers.sysplorer]`
 
-#### Modelex（JSON）
-- **文件**：`%USERPROFILE%\.modelex\mcp.json`
-- **节点**：`servers.sysplorer`  
-- **字段**：`command` 指向 `python.exe`；`args` 为多行字符串数组，内容顺序与 Claude 侧 `args` 一致。
+#### Mogick（JSON）
+- **文件**：`%USERPROFILE%\.mworks\mogick\Sysplorer\mcp.json`
+- **节点**：`servers.sysplorer`
+- **字段**：`type` 为 `local`；`enabled` 为 `true`；`command` 为数组，包含 `python.exe`、`main.py` 和启动参数；`timeout` 为 `1000000`。
 
 ## MCP Tools
 
-Sysplorer MCP Server 共提供 13 个工具，覆盖 Sysplorer 的启动、建模到仿真全流程，工具能力可以按用途分为以下几类。
+完整 Sysplorer 平台提供 15 个 MCP 工具；modelica_lite / mols 平台额外注册 `library_prepare`，共 16 个工具，覆盖 Sysplorer 的启动、建模到仿真全流程，工具能力可以按用途分为以下几类。
 
 ### 1. 会话与连接
 
@@ -125,7 +125,17 @@ Sysplorer MCP Server 共提供 13 个工具，覆盖 Sysplorer 的启动、建�
     <tr>
       <td><code>model_manager</code></td>
       <td>模型管理工具</td>
-      <td>用于执行模型打开、新建、加载文件、卸载、保存、导出原理图，以及组件、端口和类文本等内省查询。</td>
+      <td>用于模型新建、打开、加载文件、卸载、保存和另存为。查询使用 <code>model_inspect</code>，对比使用 <code>compare_model</code>；原理图导出通过 <code>call_code</code> 调用官方 <code>ExportDiagram</code> 接口。</td>
+    </tr>
+    <tr>
+      <td><code>model_inspect</code></td>
+      <td>模型查询工具</td>
+      <td>用于查询子类、组件、端口、类文本、说明及最近错误。</td>
+    </tr>
+    <tr>
+      <td><code>compare_model</code></td>
+      <td>模型对比工具</td>
+      <td>用于在图形界面对比两个已加载模型，或两个 .mo 文件。</td>
     </tr>
     <tr>
       <td><code>check_model</code></td>
@@ -170,7 +180,7 @@ Sysplorer MCP Server 共提供 13 个工具，覆盖 Sysplorer 的启动、建�
     <tr>
       <td><code>call_code</code></td>
       <td>脚本调用工具</td>
-      <td>用于执行 <code>run_sysplorer_api</code>、异步任务、就绪分派和 CAD 工具箱等能力，其中 <code>mode=&quot;run_sysplorer_api&quot;</code> 是 Sysblock 程序化建图和脚本化操作的重要入口。</td>
+      <td>仅支持 <code>mode=&quot;run_sysplorer_api&quot;</code>（兼容旧名 <code>run_script</code>），用于尚无专用 MCP 工具覆盖的 Sysplorer API 和工具箱批处理。脚本内容或路径放在 <code>payload</code> 中；异步任务、就绪分派和一键流水线模式已停用。</td>
     </tr>
   </tbody>
 </table>
@@ -240,4 +250,4 @@ Sysplorer MCP Server 共提供 13 个工具，覆盖 Sysplorer 的启动、建�
 </table>
 ## 许可证
 
-本项目采用 MIT 许可证授权，有关详细信息，请参阅 LICENSE 文件。 
+本项目采用 MIT 许可证授权，有关详细信息，请参阅 LICENSE 文件。

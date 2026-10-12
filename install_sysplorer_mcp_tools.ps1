@@ -1,7 +1,7 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-Configure Claude / OpenCode / Codex CLI / Modelex MCP to run sysplorer via Sysplorer bundled Python and a launcher main.py next to this script.
+Configure Claude / OpenCode / Codex CLI / Mogick MCP to run sysplorer via Sysplorer bundled Python and a launcher main.py next to this script.
 .PARAMETER MworksInstallDir
     Sysplorer installation root (used only for python.exe and --mworks-install-dir). Alias: -d. If omitted, you are prompted (with a default path).
 .PARAMETER SysplorerPlatformLabel
@@ -32,8 +32,8 @@ $McpClientKey = "sysplorer"
 $LegacyMcpKeys = @("sysplorer_mcp", "mworks_mcp")
 # OpenCode 本地 MCP 超时（毫秒），与 opencode.json 中各 MCP 条目的 timeout 字段一致
 $OpenCodeMcpTimeoutMs = 600000
-# Modelex 本地 MCP 超时（毫秒），与 ~/.modelex/mcp.json 中各 MCP 条目的 timeout 字段一致
-$ModelexMcpTimeoutMs = 1000000
+# Mogick 本地 MCP 超时（毫秒），与 ~/.mworks\mogick\Sysplorer/mcp.json 中各 MCP 条目的 timeout 字段一致
+$MogickMcpTimeoutMs = 1000000
 
 function Escape-TomlSingleQuoted([string]$s) {
     if ($null -eq $s) { return "" }
@@ -304,14 +304,14 @@ $opencodeConfigDir = Join-Path $env:USERPROFILE ".config\opencode"
 $opencodeConfigPath = Join-Path $opencodeConfigDir "opencode.json"
 $codexHome = if (-not [string]::IsNullOrWhiteSpace($env:HOME)) { $env:HOME } elseif (-not [string]::IsNullOrWhiteSpace($env:USERPROFILE)) { $env:USERPROFILE } else { (Resolve-Path ~).Path }
 $codexConfigPath = Join-Path (Join-Path $codexHome ".codex") "config.toml"
-$modelexConfigDir = Join-Path $env:USERPROFILE ".modelex"
-$modelexConfigPath = Join-Path $modelexConfigDir "mcp.json"
+$mogickConfigDir = Join-Path $env:USERPROFILE ".mworks\mogick\Sysplorer"
+$mogickConfigPath = Join-Path $mogickConfigDir "mcp.json"
 
 Write-Host "0. Backing up existing configuration files (if any)..." -ForegroundColor Yellow
 Backup-ConfigFileIfExists $claudeConfigPath
 Backup-ConfigFileIfExists $opencodeConfigPath
 Backup-ConfigFileIfExists $codexConfigPath
-Backup-ConfigFileIfExists $modelexConfigPath
+Backup-ConfigFileIfExists $mogickConfigPath
 Write-Host ""
 
 # 1. Configure Claude (.claude.json)
@@ -371,18 +371,18 @@ Write-CodexSysplorerToml -configPath $codexConfigPath -command $pythonExe -mcpAr
 )
 Write-Host "[OK] Codex configuration updated: $codexConfigPath" -ForegroundColor Green
 
-# 4. Configure Modelex (~/.modelex/mcp.json)
-Write-Host "`n4. Configuring Modelex..." -ForegroundColor Yellow
+# 4. Configure Mogick (~/.mworks\mogick\Sysplorer/mcp.json)
+Write-Host "`n4. Configuring Mogick..." -ForegroundColor Yellow
 
-if (-not (Test-Path -LiteralPath $modelexConfigDir)) {
-    New-Item -ItemType Directory -Path $modelexConfigDir -Force | Out-Null
+if (-not (Test-Path -LiteralPath $mogickConfigDir)) {
+    New-Item -ItemType Directory -Path $mogickConfigDir -Force | Out-Null
 }
 
-$modelexConfig = Read-JsonConfigRoot $modelexConfigPath
-$serversBlock = Ensure-ConfigNestedObject $modelexConfig "servers"
+$mogickConfig = Read-JsonConfigRoot $mogickConfigPath
+$serversBlock = Ensure-ConfigNestedObject $mogickConfig "servers"
 Remove-LegacyMcpKeys $serversBlock
 
-$modelexConfig.servers | Add-Member -MemberType NoteProperty -Name $McpClientKey -Value ([PSCustomObject]@{
+$mogickConfig.servers | Add-Member -MemberType NoteProperty -Name $McpClientKey -Value ([PSCustomObject]@{
     type = "local"
     enabled = $true
     command = @(
@@ -391,13 +391,13 @@ $modelexConfig.servers | Add-Member -MemberType NoteProperty -Name $McpClientKey
         "--mworks-install-dir", $mworksDir,
         "--sysplorer-platform-label", $platformLabel
     )
-    timeout = $ModelexMcpTimeoutMs
+    timeout = $MogickMcpTimeoutMs
 }) -Force
 
-$jsonContent = $modelexConfig | ConvertTo-Json -Depth 10
+$jsonContent = $mogickConfig | ConvertTo-Json -Depth 10
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-[System.IO.File]::WriteAllText($modelexConfigPath, $jsonContent, $utf8NoBom)
-Write-Host "[OK] Modelex configuration updated: $modelexConfigPath" -ForegroundColor Green
+[System.IO.File]::WriteAllText($mogickConfigPath, $jsonContent, $utf8NoBom)
+Write-Host "[OK] Mogick configuration updated: $mogickConfigPath" -ForegroundColor Green
 
 Write-SysplorerMcpPipCheckResult -MworksInstallDir $mworksDir
 
@@ -408,7 +408,7 @@ if (-not (Test-Path -LiteralPath $silentPy)) {
 if ($env:NO_SYNC_OPENCODE_SKILLS -eq "1") {
     Write-Host "`n[INFO] Skipping OpenCode skills sync (NO_SYNC_OPENCODE_SKILLS=1)." -ForegroundColor DarkGray
 } elseif (Test-Path -LiteralPath $silentPy) {
-    Write-Host "`nSyncing bundled modeling_skills to OpenCode and Modelex global skills directories ..." -ForegroundColor Yellow
+    Write-Host "`nSyncing bundled modeling_skills to OpenCode and Mogick global skills directories ..." -ForegroundColor Yellow
     try {
         & $pythonExe $silentPy --sync-opencode-skills --bundle-root $scriptDir
     } catch {
@@ -419,7 +419,7 @@ if ($env:NO_SYNC_OPENCODE_SKILLS -eq "1") {
 }
 
 Write-Host "`nConfiguration completed." -ForegroundColor Cyan
-Write-Host "Please restart Claude Code / OpenCode / Codex CLI / Modelex to load the new MCP configuration." -ForegroundColor Gray
+Write-Host "Please restart Claude Code / OpenCode / Codex CLI / Mogick to load the new MCP configuration." -ForegroundColor Gray
 Write-Host "Other Python deps (fastmcp, anyio, ...) may still be required in Sysplorer's site-packages; use the same python.exe -m pip if needed." -ForegroundColor Gray
 Write-Host "To uninstall, remove the sysplorer entry from the corresponding configuration file." -ForegroundColor Gray
 if (-not $silentInstall) {

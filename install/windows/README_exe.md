@@ -9,7 +9,7 @@
 | `sysplorer_mcp_server.exe` | MCP 服务端（交给 modelica-lite 侧随产品启动） |
 | `resources/` | 语料与 modeling skills（含 `resources_mogick` 覆盖层） |
 | `install-helper.exe` | 模型库安装提权辅助（依赖下载/落盘时使用） |
-| `install_mcp.ps1` | 可选：把 exe 写入本机 Claude / OpenCode / Codex / Modelex 配置 |
+| `install_mcp.ps1` | 可选：把 exe 写入本机 Claude / OpenCode / Codex / Mogick 配置 |
 | `MCP_BUILD_INFO.json` | 版本与 `pack_variant=modelica_lite` |
 
 宿主启动 exe 时请注入：

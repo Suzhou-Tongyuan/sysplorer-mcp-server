@@ -42,9 +42,9 @@ def _fake_home_configs(home: Path) -> None:
     codex = home / ".codex"
     codex.mkdir(parents=True, exist_ok=True)
     _touch(codex / "config.toml", "")
-    modelex = home / ".modelex"
-    modelex.mkdir(parents=True, exist_ok=True)
-    _touch(modelex / "mcp.json", "{}\n")
+    mogick = home / ".mworks" / "mogick" / "Sysplorer"
+    mogick.mkdir(parents=True, exist_ok=True)
+    _touch(mogick / "mcp.json", "{}\n")
 
 
 class TestNormalizeAndPlatform(unittest.TestCase):
@@ -176,7 +176,7 @@ class TestInstallMcpIntegration(unittest.TestCase):
             updated, errors = ims.install_mcp(str(self._mw), "TestPlatform")
 
         self.assertEqual(errors, [])
-        self.assertEqual(set(updated), {"Claude", "OpenCode", "Codex", "Modelex"})
+        self.assertEqual(set(updated), {"Claude", "OpenCode", "Codex", "Mogick"})
 
         claude_path = self._home / ".claude.json"
         data = json.loads(claude_path.read_text(encoding="utf-8"))
@@ -202,9 +202,9 @@ class TestInstallMcpIntegration(unittest.TestCase):
         self.assertIn("[mcp_servers.sysplorer]", toml_txt)
         self.assertIn("TestPlatform", toml_txt)
 
-        modelex_path = self._home / ".modelex" / "mcp.json"
-        modelex = json.loads(modelex_path.read_text(encoding="utf-8"))
-        mx = modelex["servers"]["sysplorer"]
+        mogick_path = self._home / ".mworks" / "mogick" / "Sysplorer" / "mcp.json"
+        mogick = json.loads(mogick_path.read_text(encoding="utf-8"))
+        mx = mogick["servers"]["sysplorer"]
         self.assertTrue(mx.get("enabled"))
         self.assertEqual(mx["type"], "local")
         self.assertIn("TestPlatform", mx["command"])

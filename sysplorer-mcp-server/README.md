@@ -27,7 +27,7 @@ sysplorer-mcp-server/
 │   ├── sysplorer.py        # 健康检查、driver 重启、进程管理
 │   ├── model_ops.py        # 模型加载、编译检查、翻译、仿真
 │   ├── results.py          # 仿真结果读取、变量查询、绘图
-│   ├── workflow.py         # call_code（统一脚本/工作流/异步）
+│   ├── workflow.py         # call_code（仅 run_sysplorer_api，兼容 run_script）
 │   ├── layout.py           # Smart Layout 布局工具
 │   ├── docs.py             # RAG 文档检索工具
 │   ├── lib_docs.py         # `get_lib_model_document` + `get_api_document`
@@ -108,7 +108,7 @@ python sysplorer-mcp-server/main.py
 ## 测试
 
 ```bash
-pytest tests/
+pytest sysplorer-mcp-server/tests/
 ```
 
 ## 核心 MCP 工具一览
@@ -124,7 +124,9 @@ pytest tests/
 | `call_code` | 最后手段：仅 `run_sysplorer_api`（旧名 `run_script` 仍兼容）。异步检查、就绪分派、一键流水线已从 tools/list 拿掉 |
 | `load_library` | **列出已安装库**（`action=installed`）+ **加载本机库**（`action=load` / `LoadLibrary`）。schema 只有这 4 个参数 |
 | `library_prepare` | **仅 modelica_lite / mols 注册**：`plan` / `resolve` / `latest` / `download` / `prepare`。2026b 不出现在 tools/list |
-| `model_manager` | 生命周期：`new` / `open` / `load_file` / `unload` / `save`。查询走 `model_inspect`，对比走 `compare_model` |
+| `model_manager` | 生命周期：`new` / `open` / `load_file` / `unload` / `save` / `save_as`。查询走 `model_inspect`，对比走 `compare_model` |
+| `model_inspect` | 子类、组件、端口、类文本、说明与最近错误查询 |
+| `compare_model` | 图形界面对比两个已加载模型或两个 .mo 文件 |
 | `check_model` | 编译/实例化检查 |
 | `translate_model` | `TranslateModel` |
 | `simulate_model` | `SimulateModel` + 结果校验 |

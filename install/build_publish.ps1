@@ -7,7 +7,7 @@
   sysplorer-mcp-server 下 temp/、logs/ 为本地运行残留，发布时 /XD 排除，避免被占用或权限导致 robocopy 失败/假死。
   若长时间停在「Sync resources」：多为杀软扫描大索引 JSON（如 indexes/sysblock_model_library_index.json）、或个别文件被占用；脚本会打印 robocopy 日志路径，失败时自动 tail 日志；请先关闭占用 publish/resources 或源 resources 的进程后再跑。
   目录填充完成后，将 publish/sysplorer_mcp 打成 zip 放到 publish/：sysplorer_mcp_v{version}.zip。打包前删除 publish/ 下既有 sysplorer_mcp_v*.zip；先写入 %TEMP% 再移入 publish，避免把压缩包打进自身。
-  默认发布版：版本号仅为 install/package_version.json 的 version_base（如 0.5）。
+  默认发布版：版本号仅为 install/package_version.json 的 version_base（如 0.6）。
   加 -Internal：内部版 version_base.x（x = git rev-list --count HEAD）。
   均写入 publish 内 sysplorer-mcp-server/_build_meta.py 与 MCP_BUILD_INFO.json。
   启动后会提示手动输入 Python（>= 3.10）的 python.exe 路径并校验；也可用 -PythonExe 跳过交互直接校验。

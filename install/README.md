@@ -39,16 +39,16 @@ bash install/linux/scripts/build_publish.sh
 5. **产出位置**
 
    - 目录：`../publish/sysplorer_mcp/`（相对 `install` 即仓库根下 `publish/sysplorer_mcp`）。
-   - 压缩包：`../publish/sysplorer_mcp_v{version}.zip`（`{version}` 与包内版本号一致，发布版如 `0.5`，内部版如 `0.5.x`）。
+   - 压缩包：`../publish/sysplorer_mcp_v{version}.zip`（`{version}` 与包内版本号一致，发布版如 `0.6`，内部版如 `0.6.x`）。
    - 目录主要内容：`main.py`、`sysplorer-mcp-server/`、`resources/`、`install_mcp.ps1`、`install_mcp.sh`、`MCP_BUILD_INFO.json`、`README.md`。
 
 `resources/` 下任意子目录新增或更新的 Markdown（例如说明文档）会随整树一并进入发布包，无需改复制清单。
 
 ## 版本号
 
-- 手工配置：`install/package_version.json` 中的 `version_base`（默认 `0.5`），**只能**是两位数字段如 `0.5`，**不要**写成 `0.5.x`（内部版时 `x` 由脚本用 Git 提交总数追加）。
+- 手工配置：`install/package_version.json` 中的 `version_base`（默认 `0.6`），**只能**是两位数字段如 `0.6`，**不要**写成 `0.6.x`（内部版时 `x` 由脚本用 Git 提交总数追加）。
 - **`build_publish.ps1`（默认）** / **`build_publish.sh`**：发布版，版本仅为 `version_base`。
-- **`build_publish.ps1 -Internal`** / **`build_publish.sh --internal`**：内部版，`0.5.x`（`x` = `git rev-list --count HEAD`）。
+- **`build_publish.ps1 -Internal`** / **`build_publish.sh --internal`**：内部版，`0.6.x`（`x` = `git rev-list --count HEAD`）。
 
 ## 另：打包 exe（`build.ps1`）
 

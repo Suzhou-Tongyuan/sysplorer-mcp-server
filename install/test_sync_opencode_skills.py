@@ -189,14 +189,14 @@ class TestSyncOpenCodeSkills(unittest.TestCase):
         self.assertNotIn("OLD", text)
         self.assertFalse((dst / "skill-a" / "stale.txt").exists())
 
-    def test_modelex_default_dest_root(self) -> None:
-        expected = (Path.home() / ".modelex" / "skills").resolve()
-        self.assertEqual(s.modelex_skills_default_dest_root(), expected)
+    def test_mogick_default_dest_root(self) -> None:
+        expected = (Path.home() / ".mworks" / "mogick" / "Sysplorer" / "skills").resolve()
+        self.assertEqual(s.mogick_skills_default_dest_root(), expected)
 
     def test_sync_agent_skills_writes_both_destinations(self) -> None:
         src = self._tmp / "src_both"
         opencode_dst = self._tmp / "opencode" / "skills"
-        modelex_dst = self._tmp / "modelex" / "skills"
+        mogick_dst = self._tmp / "mogick" / "skills"
         src.mkdir(parents=True)
         self._make_skill(src, "ty-both")
 
@@ -205,14 +205,14 @@ class TestSyncOpenCodeSkills(unittest.TestCase):
             source_dir=src,
             dest_roots=[
                 ("OpenCode", opencode_dst),
-                ("Modelex", modelex_dst),
+                ("Mogick", mogick_dst),
             ],
             write_sidecar=False,
             log=lambda _m: None,
         )
         self.assertTrue(out["ok"], msg=out)
         self.assertTrue((opencode_dst / "ty-both" / "SKILL.md").is_file())
-        self.assertTrue((modelex_dst / "ty-both" / "SKILL.md").is_file())
+        self.assertTrue((mogick_dst / "ty-both" / "SKILL.md").is_file())
         self.assertEqual(len(out.get("destinations") or []), 2)
 
     def test_skipped_no_sidecar_file(self) -> None:

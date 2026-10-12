@@ -6,7 +6,7 @@
   - 可选环境变量 MWORKS_SYSPLORER_PYTHON：指向 Sysplorer 的 python.exe，脚本会尝试用其 -m pip 向 .venv 安装 mworks / pywin32（若存在对应 wheel）。
   - 仓库根 resources/ 同步到 dist/resources/：先删除 dist/resources 再 Copy-Item -LiteralPath 整树复制（完整替换）；同步后校验文件/目录数量。目录内任意新增/更新文件（含 modeling_skills/ 下 Markdown）均随整树一并发布，无需改 .spec。脚本不使用顶层 [CmdletBinding]，避免与部分 PS 版本组合时出现 AmbiguousParameterSet。
   - 全部完成后在 dist/ 生成发布包：sysplorer_mcp_server_v{versionFull}.7z（已安装 7-Zip 时），否则为同名 .zip；打包前会删除 dist 内既有 sysplorer_mcp_server_v*.7z/.zip，避免旧包被打进新归档；先写入 %TEMP% 再移入 dist，避免归档把正在生成的新包打进去。versionFull 与 MCP_BUILD_INFO / exe 一致。
-  - 版本：`install/package_version.json` 的 `version_base`（如 0.5）；内部版（默认）为 `0.5.x`，x=`git rev-list --count HEAD`；加 `-Release` 时仅 `0.5`（与 `install/build_publish.ps1` 发布目录一致）。
+  - 版本：`install/package_version.json` 的 `version_base`（如 0.6）；内部版（默认）为 `0.6.x`，x=`git rev-list --count HEAD`；加 `-Release` 时仅 `0.6`（与 `install/build_publish.ps1` 发布目录一致）。
 #>
 param(
     [string]$RepoRoot = "",

@@ -19,7 +19,7 @@ Because of those dependencies, the Linux package is **limited support**, not ful
 
 - build a Linux distribution folder under `install/dist/linux-x64/`
 - build a native Linux executable with PyInstaller
-- install `sysplorer` entries into Claude Code, OpenCode, Codex, and Modelex config files
+- install `sysplorer` entries into Claude Code, OpenCode, Codex, and Mogick config files
 - validate package layout, binary startup, templates, and client wiring on a Linux machine
 
 ## What It Does Not Promise
@@ -32,7 +32,7 @@ Because of those dependencies, the Linux package is **limited support**, not ful
 
 - `scripts/build_publish.sh` — 与 Windows 上 `install/build_publish.ps1` 等价：生成 `publish/sysplorer_mcp/`（`main.py`、`sysplorer-mcp-server/`、`resources/`、`MCP_BUILD_INFO.json`、`README.md`（自 `install/linux/README.md` 复制）、`install_mcp.sh`、`install_mcp_silent.py`）。**不包含** PyInstaller / exe。
 - `scripts/build.sh` — Linux 原生可执行文件 + `tar.gz`（PyInstaller）；与 Windows `install/build.ps1` 的 exe 流程对应；若仅需源码发布目录请用 `build_publish.sh`。
-- `scripts/install_mcp.sh` — 一键写入 Claude / OpenCode / Codex / Modelex 配置；自动识别**源码包**（存在 `main.py` 与 `sysplorer-mcp-server/`）或**二进制包**（存在 `sysplorer_mcp_server`）。在存在 `resources/modeling_skills` 时，还会调用包内 **`install_mcp_silent.py --sync-opencode-skills`**（或仓库 `install/install_mcp_silent.py`）将技能同步到 **`$HOME/.config/opencode/skills/`** 与 **`$HOME/.modelex/skills/`**（白名单逐目录替换，不清空 `skills` 根）。跳过：环境变量 **`NO_SYNC_OPENCODE_SKILLS=1`**。
+- `scripts/install_mcp.sh` — 一键写入 Claude / OpenCode / Codex / Mogick 配置；自动识别**源码包**（存在 `main.py` 与 `sysplorer-mcp-server/`）或**二进制包**（存在 `sysplorer_mcp_server`）。在存在 `resources/modeling_skills` 时，还会调用包内 **`install_mcp_silent.py --sync-opencode-skills`**（或仓库 `install/install_mcp_silent.py`）将技能同步到 **`$HOME/.config/opencode/skills/`** 与 **`$HOME/.mworks/mogick/Sysplorer/skills/`**（白名单逐目录替换，不清空 `skills` 根）。跳过：环境变量 **`NO_SYNC_OPENCODE_SKILLS=1`**。
 
 ## 发布目录（推荐，与 ps1 发布一致）
 
@@ -166,7 +166,7 @@ Then verify:
 - [ ] `~/.codex/config.toml` contains `[mcp_servers.sysplorer]`（`install_mcp.sh` 会写入）
 - [ ] `mcpServers.sysplorer.command` 指向 Python 可执行文件（源码包）或 `sysplorer_mcp_server` 路径（二进制包）
 - [ ] `mcp.sysplorer.type` equals `local`
-- [ ] `~/.modelex/mcp.json` contains `servers.sysplorer` with `enabled: true`
+- [ ] `~/.mworks/mogick/Sysplorer/mcp.json` contains `servers.sysplorer` with `enabled: true`
 - [ ] 上述配置均含 `--mworks-install-dir` 与 `--sysplorer-platform-label`
 
 Recommended command:
@@ -178,8 +178,8 @@ claude = pathlib.Path.home() / '.claude.json'
 opencode = pathlib.Path.home() / '.config' / 'opencode' / 'opencode.json'
 print(json.dumps(json.loads(claude.read_text(encoding='utf-8'))['mcpServers']['sysplorer'], indent=2, ensure_ascii=False))
 print(json.dumps(json.loads(opencode.read_text(encoding='utf-8'))['mcp']['sysplorer'], indent=2, ensure_ascii=False))
-modelex = pathlib.Path.home() / '.modelex' / 'mcp.json'
-print(json.dumps(json.loads(modelex.read_text(encoding='utf-8'))['servers']['sysplorer'], indent=2, ensure_ascii=False))
+mogick = pathlib.Path.home() / '.mworks' / 'mogick' / 'Sysplorer' / 'mcp.json'
+print(json.dumps(json.loads(mogick.read_text(encoding='utf-8'))['servers']['sysplorer'], indent=2, ensure_ascii=False))
 PY
 ```
 
