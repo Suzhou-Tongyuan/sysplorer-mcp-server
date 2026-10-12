@@ -1,0 +1,7 @@
+interface:
+  display_name: "Sysplorer 帮助中心（MDS）"
+  short_description: "官方帮助问答（非建模执行）"
+  default_prompt: "仅当用户主目标是检索/讲解官方帮助（概念、教程步骤、原理、故障原因、官方示例说明、最佳实践），或明确要求先查帮助文档时，使用 $sysplorer-mds-docs。若用户要实际新建/编写/检查/编译/仿真/修改/调试具体模型，即使含「怎么建」，也主走建模总则与领域技能；本技能最多辅查。mdsSearch 在工具列表中才调用：把问题改写成约 100 字假设性答案作为唯一 query；禁止关键词或原话照抄；无结果须改写再试。完成门禁：有命中则首条回复末尾必须用三列表「| 序号 | 描述 | 链接 |」；链接列只用 metadata.external_link（http(s)）；禁止把 metadata.location / tags:topic_id / 内部 .md 路径填进链接列；无 external_link 则写「（无外部链接）」或跳过该行。不可用则降级说明，不中断建模。"
+
+policy:
+  allow_implicit_invocation: true

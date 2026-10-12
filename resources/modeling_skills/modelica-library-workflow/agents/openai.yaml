@@ -1,0 +1,7 @@
+interface:
+  display_name: "Modelica 模型库开发流程"
+  short_description: "Modelica 库结构、公共接口、Examples/Tests 与库级治理；验证按请求执行"
+  default_prompt: "先应用 `ty-sysplorer-modeling-rules`。仅当目标涉及 Modelica 库结构、公共接口、Examples / Tests、库级本地化或治理时调用 $modelica-library-workflow；普通单模型不触发。已有具体故障按父级调试入口主导。选择一个匹配工作流并按需读取资料；模板专属规则仅在采用模板时适用。执行到用户请求的终端阶段，骨架和文件任务不默认运行 Sysplorer，结果及正式文档按需。复用父级 MCP 0.4 会话、工具和重试契约，用中文说明真实完成层级。"
+
+policy:
+  allow_implicit_invocation: true

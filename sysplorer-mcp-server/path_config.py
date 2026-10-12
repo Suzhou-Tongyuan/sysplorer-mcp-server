@@ -100,14 +100,87 @@ def _compute_workspace_root() -> Path:
 
 
 WORKSPACE_ROOT = _compute_workspace_root()
+
+
+def _compute_user_workspace_root() -> Path | None:
+    env = os.environ.get("MCP_USER_WORKSPACE_DIR", "").strip()
+    if not env:
+        return None
+    return Path(env).expanduser().resolve()
+
+
+USER_WORKSPACE_ROOT = _compute_user_workspace_root()
+
+
+def is_modelica_lite_platform() -> bool:
+    """True when ``--sysplorer-platform-label`` / env is ``modelica_lite`` or ``mols``.
+
+    Accepts hyphen form ``modelica-lite`` (normalized to underscore).
+    """
+    label = os.environ.get("SYSPLORER_PLATFORM_LABEL", "").strip().lower().replace("-", "_")
+    return label in ("modelica_lite", "mols")
+
+
+def ensure_modelica_lite_site_helpers() -> bool:
+    """Install ``builtins.help`` on modelica_lite when ``site.py`` did not run.
+
+    PyInstaller sets ``Py_NoSiteFlag``, so ``site.sethelper()`` never attaches
+    ``help``. ``ModelingPy.Help`` then raises ``NameError: name 'help' is not defined``.
+    Returns True when this call installed ``help``.
+    """
+    if not is_modelica_lite_platform():
+        return False
+    import builtins
+
+    try:
+        import pydoc
+    except Exception:
+        return False
+
+    existing = getattr(builtins, "help", None)
+    # pydoc.doc(..., output=self._output) uses the bound stream. Binding sys.stdout at
+    # install time makes later redirect_stdout miss Help() text (empty get_api_document).
+    if isinstance(existing, pydoc.Helper):
+        if getattr(existing, "_output", None) is not None:
+            existing._output = None
+            return True
+        return False
+    if callable(existing):
+        return False
+    builtins.help = pydoc.Helper(input=None, output=None)
+    return True
+
+
+def library_download_tools_enabled() -> bool:
+    """Remote library download/install is modelica_lite / mols only.
+
+    Full Sysplorer already has commercial packs locally; agents must ``LoadLibrary``,
+    not enter the download/prepare path.
+    """
+    return is_modelica_lite_platform()
+
+
+def dependency_downloads_enabled() -> bool:
+    """True only when startup explicitly provided --user-workspace."""
+    enabled = os.environ.get("MCP_DEPENDENCY_DOWNLOAD_ENABLED", "").strip().lower()
+    return enabled in ("1", "true", "yes", "on") and USER_WORKSPACE_ROOT is not None
 # 向后兼容：历史代码中的 PROJECT_ROOT 均指「工作区」，不是 exe 目录
 PROJECT_ROOT = WORKSPACE_ROOT
+
+
+def _first_existing_path(candidates: tuple[Path, ...], fallback: Path) -> Path:
+    return next((candidate for candidate in candidates if candidate.exists()), fallback)
+
 
 def _default_mworks_install_dir() -> Path:
     if PLATFORM == "Windows":
         return Path(r"C:\Program Files\MWORKS\Sysplorer 2026a")
     if PLATFORM == "Linux":
-        return Path("/usr/local/MWORKS/Sysplorer-2026a")
+        candidates = (
+            Path("/opt/MWORKS/Sysplorer-2026a"),
+            Path("/usr/local/MWORKS/Sysplorer-2026a"),
+        )
+        return _first_existing_path(candidates, candidates[0])
     return Path("/Applications/MWORKS/Sysplorer-2026a.app/Contents")
 
 
@@ -116,28 +189,66 @@ def _default_site_packages(install_dir: Path) -> Path:
         return install_dir / "External" / "python64" / "Lib" / "site-packages"
 
     candidates = (
+        install_dir / "External" / "python64" / "lib" / "python3.11" / "site-packages",
+        install_dir / "External" / "python64" / "lib" / "python3.12" / "site-packages",
+        install_dir / "External" / "python64" / "lib" / "python3.13" / "site-packages",
+        install_dir / "External" / "python64" / "lib" / "python3.14" / "site-packages",
+        install_dir / "External" / "python64" / "lib" / "site-packages",
         install_dir / "external" / "python64" / "lib" / "python3.11" / "site-packages",
         install_dir / "external" / "python64" / "lib" / "python3.12" / "site-packages",
         install_dir / "external" / "python64" / "lib" / "python3.13" / "site-packages",
+        install_dir / "external" / "python64" / "lib" / "python3.14" / "site-packages",
         install_dir / "external" / "python64" / "lib" / "site-packages",
     )
-    return next((candidate for candidate in candidates if candidate.exists()), candidates[0])
+    return _first_existing_path(candidates, candidates[0])
 
 
 def _default_bin64_dir(install_dir: Path) -> Path:
-    bin_dir_name = "Bin64" if PLATFORM == "Windows" else "bin64"
-    return install_dir / bin_dir_name
+    if PLATFORM == "Windows":
+        return install_dir / "Bin64"
+    candidates = (
+        install_dir / "bin64",
+        install_dir / "Bin64",
+    )
+    return _first_existing_path(candidates, candidates[0])
+
+
+def _default_simulator_bin(install_dir: Path) -> Path:
+    if PLATFORM == "Windows":
+        return install_dir / "Simulator" / "Bin64"
+    candidates = (
+        install_dir / "Simulator" / "bin64",
+        install_dir / "Simulator" / "Bin64",
+        install_dir / "simulator" / "bin64",
+        install_dir / "simulator" / "Bin64",
+    )
+    return _first_existing_path(candidates, candidates[0])
 
 
 def _default_solver_exe(install_dir: Path) -> Path:
-    solver_name = "MWSolver.exe" if PLATFORM == "Windows" else "MWSolver"
-    return install_dir / "Simulator" / "Bin64" / solver_name
+    if PLATFORM == "Windows":
+        return install_dir / "Simulator" / "Bin64" / "MWSolver.exe"
+    candidates = (
+        install_dir / "Simulator" / "bin64" / "MWSolver",
+        install_dir / "Simulator" / "Bin64" / "MWSolver",
+        install_dir / "simulator" / "bin64" / "MWSolver",
+        install_dir / "simulator" / "bin64" / "mwsolver",
+        install_dir / "simulator" / "Bin64" / "MWSolver",
+    )
+    return _first_existing_path(candidates, candidates[0])
 
 def _default_python_path(install_dir: Path) -> Path:
     if PLATFORM == "Windows":
         return install_dir / "External" / "python64" / "python.exe"
-    else:
-        return install_dir/ "external" / "python64" / "bin" / "python3"
+    candidates = (
+        install_dir / "External" / "python64" / "bin" / "python3",
+        install_dir / "External" / "python64" / "bin" / "python",
+        install_dir / "external" / "python64" / "bin" / "python3",
+        install_dir / "external" / "python64" / "bin" / "python",
+        install_dir / "bin" / "python3",
+        install_dir / "bin" / "python",
+    )
+    return _first_existing_path(candidates, candidates[0])
 
 # ── MWorks / Sysplorer 安装路径 ──────────────────────────────────────────────
 MWORKS_INSTALL_DIR = Path(
@@ -162,7 +273,7 @@ MWORKS_SITE_PACKAGES = Path(
 SYSPLORER_PYTHON = Path(
     os.environ.get(
         "SYSPLORER_PYTHON",
-        str(MWORKS_INSTALL_DIR / "External" / "python64" / "python.exe"),
+        str(_default_python_path(MWORKS_INSTALL_DIR)),
     )
 )
 
@@ -176,13 +287,38 @@ MWORKS_LIBRARY_ROOT = Path(
 MWORKS_SIMULATOR_BIN = Path(
     os.environ.get(
         "MWORKS_SIMULATOR_BIN",
-        str(MWORKS_INSTALL_DIR / "Simulator" / "Bin64"),
+        str(_default_simulator_bin(MWORKS_INSTALL_DIR)),
     )
 )
 
 MWORKS_SOLVER_EXE = Path(
     os.environ.get("MWORKS_SOLVER_EXE", str(_default_solver_exe(MWORKS_INSTALL_DIR)))
 )
+
+
+def resolve_sysplorer_python_path(path: Path) -> Path:
+    candidate = path.expanduser()
+    try:
+        if candidate.exists():
+            return candidate.resolve()
+    except OSError:
+        return candidate
+
+    install_candidates: list[Path] = [MWORKS_INSTALL_DIR]
+    for parent in candidate.parents:
+        if parent in install_candidates:
+            continue
+        if any((parent / child).exists() for child in ("External", "external", "Bin64", "bin64", "Simulator", "simulator")):
+            install_candidates.append(parent)
+
+    for install_dir in install_candidates:
+        resolved = _default_python_path(install_dir)
+        try:
+            if resolved.exists():
+                return resolved.resolve()
+        except OSError:
+            continue
+    return candidate
 
 
 def _default_mworks_workdir() -> str:
@@ -259,7 +395,8 @@ else:
 
 TEMP_CODE_FOLDER = "sysplorer-mcp-server/temp/code"
 
-# 文档 RAG 默认索引：旁置布局（frozen / MCP_DEPLOY_ROOT）用 resources/indexes/；纯开发态用包内路径
+# 文档 RAG 默认索引相对路径。旁置用 resources/indexes/（常在只读部署目录）；
+# 实际落盘由 _resolve_rag_index_for_use 探测可写性，失败则落到工作区 .mworks_mcp/rag 或系统 scratch。
 RAG_INDEX_PATH = (
     "resources/indexes/modelica_doc_index.json"
     if _DEPLOY_SIDECAR

@@ -1,0 +1,9 @@
+{
+  "英文名": "sysplorer-mds-docs",
+  "中文名": "Sysplorer 帮助中心（MDS）文档检索",
+  "版本号": "1.8.0",
+  "中文功能定位": "主目标为官方帮助问答时用 mdsSearch；有命中则首条回复必须以三列表格「序号|描述|链接」输出，链接列用 metadata.external_link，禁止把 location/tags 当超链接。不与建模执行抢主技能。query 为约 100 字假设性答案。工具是否可用只看列表；失败不阻断建模。",
+  "英文功能定位": "Primary for official help Q&A via mdsSearch; on hits end with 3-col table 序号|描述|链接 using metadata.external_link (never location/tags as the link). Must not steal modeling-execution triggers. Hypothetical-answer query; availability = tool listed; non-blocking.",
+  "中文分类": "文档检索（可选）",
+  "英文分类": "Documentation Retrieval (Optional)"
+}

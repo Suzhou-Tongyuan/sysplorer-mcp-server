@@ -14,7 +14,7 @@
 
 当需要手动安装 sysplorer mcp 服务时，可以通过“<Sysplorer安装目录>/Tools/sysplorer_mcp”内的 “install_mcp.ps1” 一键安装 Windows Sysplorer MCP Server、“install_mcp.sh” 一键安装 Linux Sysplorer MCP Server。
 
-下文以 Windows 为例：
+下文以 Windows 为例。Linux 的打包、安装与验证清单请参考 `install/linux/README.md`。
 
 1. 在 “<Sysplorer安装目录>/Tools/sysplorer_mcp” 内右键 “install_mcp.ps1”安装脚本选择“通过 PowerShell 运行”或在当前目录启动 PowserShell 后执行执行如下命令：
 
@@ -27,7 +27,7 @@
 | 项                     | 含义                                                         | 典型示例                                  |
 | ---------------------- | ------------------------------------------------------------ | ----------------------------------------- |
 | **Sysplorer 安装路径** | 写入各客户端配置，并作为 MCP 进程参数 `--mworks-install-dir` | `C:\Program Files\MWORKS\Sysplorer 2026a` |
-| **Sysplorer 平台标签** | 参数 `--sysplorer-platform-label`，用于标识平台/版本展示     | `Sysplorer 2026a`                         |
+| **Sysplorer 平台标签** | 参数 `--sysplorer-platform-label`，用于标识平台/版本展示     | `Sysplorer 2026b`                         |
 
 脚本会校验路径下是否存在 **`External\python64\python.exe`**；MCP 实际由该解释器执行本目录中的 **`main.py`** 启动。
 
@@ -35,7 +35,7 @@ Python 与依赖环境说明
 
 - **解释器**：必须使用 **当前所选 Sysplorer 安装目录** 下的 `External\python64\python.exe`，以保证与 `mworks.sysplorer` 等接口一致。如需使用自定义Python，请确保安装了 Sysplorer Python API 及 MCP 库。
 
-- **Python 包**：服务端依赖 **`mcp`** 以及 **`fastmcp`、`anyio`** 等（与仓库 `mworks_mcp_server` 要求一致）。安装脚本在写配置结束后会执行一次 **`python.exe -m pip list`**，检查是否存在名为 **`mcp`** 的包；若缺失，会提示使用 **PowerShell** 下正确的调用方式安装（路径含空格时必须使用 **`&`**）：
+- **Python 包**：服务端依赖 **`mcp`** 以及 **`fastmcp`、`anyio`** 等（与仓库 `sysplorer-mcp-server` 要求一致）。安装脚本在写配置结束后会执行一次 **`python.exe -m pip list`**，检查是否存在名为 **`mcp`** 的包；若缺失，会提示使用 **PowerShell** 下正确的调用方式安装（路径含空格时必须使用 **`&`**）：
 
   ```powershell
   & "C:\你的\Sysplorer\根目录\External\python64\python.exe" -m pip install mcp
@@ -51,7 +51,7 @@ Python 与依赖环境说明
 #### Claude Code（JSON）
 
 - **文件**：`%USERPROFILE%\.claude.json`  
-- **节点**：`mcpServers.sysplorer_mcp`  
+- **节点**：`mcpServers.sysplorer`  
 - **本包（Python 布局）典型形态**：  
   - `command`：`Sysplorer` 的 `External\python64\python.exe` 绝对路径  
   - `args`：`["<本包main.py绝对路径>", "--mworks-install-dir", "<Sysplorer根目录>", "--sysplorer-platform-label", "<标签>"]`
@@ -59,14 +59,19 @@ Python 与依赖环境说明
 #### OpenCode（JSON）
 
 - **文件**：`%USERPROFILE%\.config\opencode\opencode.json`  
-- **节点**：`mcp.sysplorer_mcp`  
+- **节点**：`mcp.sysplorer`  
 - **字段**：`type` 一般为 `local`；`command` 为数组，首元素为 `python.exe`，其后为 `main.py` 路径及与上相同的参数。
 
 #### Codex（TOML）
 
 - **文件**：`%USERPROFILE%\.codex\config.toml`  
-- **节名**：`[mcp_servers.sysplorer_mcp]`  
+- **节名**：`[mcp_servers.sysplorer]`  
 - **字段**：`command` 指向 `python.exe`；`args` 为多行字符串数组，内容顺序与 Claude 侧 `args` 一致。
+
+#### Modelex（JSON）
+- **文件**：`%USERPROFILE%\.modelex\mcp.json`  
+- **节点**：`servers.sysplorer`  
+- **字段**：`type` 一般为 `local`；`enabled` 为 `true`；`command` 为数组，首元素为 `python.exe`，其后为 `main.py` 路径及与上相同的参数；`timeout` 建议 `1000000`。
 
 ## MCP Tools
 
@@ -167,7 +172,7 @@ Sysplorer MCP Server 共提供 13 个工具，覆盖 Sysplorer 的启动、建�
       <tr>
         <td><code>call_code</code></td>
         <td>脚本调用工具</td>
-        <td>用于执行 <code>run_script</code>、异步任务、就绪分派和 CAD 工具箱等能力，其中 <code>mode=&quot;run_script&quot;</code> 是 Sysblock 程序化建图和脚本化操作的重要入口。</td>
+        <td>用于执行 <code>run_script</code>、异步任务、就绪分派和 CAD 工具箱等能力，其中 <code>mode=&quot;run_sysplorer_api&quot;</code> 是 Sysblock 程序化建图和脚本化操作的重要入口。</td>
       </tr>
     </tbody>
   </table>

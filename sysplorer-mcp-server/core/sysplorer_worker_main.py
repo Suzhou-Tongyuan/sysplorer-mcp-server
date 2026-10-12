@@ -18,6 +18,12 @@ import warnings
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
+_PKG_DIR = Path(__file__).resolve().parent.parent
+if str(_PKG_DIR) not in sys.path:
+    sys.path.insert(0, str(_PKG_DIR))
+
+from launch_context import start_sysplorer_in_desktop_context
+
 
 def _send(obj: Dict[str, Any]) -> None:
     sys.stdout.write(json.dumps(obj, ensure_ascii=False, default=str) + "\n")
@@ -42,6 +48,19 @@ def _map_time_strings(
     sim_end: Any,
     value: Any,
 ) -> Any:
+    try:
+        from core.result_time import parse_result_time_point
+    except Exception:
+        parse_result_time_point = None  # type: ignore
+    if parse_result_time_point is not None:
+        parsed = parse_result_time_point(value)
+        if parsed.kind == "end":
+            return sim_end if sim_end is not None else value
+        if parsed.kind == "begin":
+            return sim_begin if sim_begin is not None else value
+        if parsed.kind == "numeric":
+            return float(parsed.numeric)
+        return value
     if not isinstance(value, str):
         return value
     t = value.strip().lower()
@@ -49,7 +68,10 @@ def _map_time_strings(
         return sim_end if sim_end is not None else value
     if t in ("begin", "start", "initial"):
         return sim_begin if sim_begin is not None else value
-    return value
+    try:
+        return float(t)
+    except ValueError:
+        return value
 
 
 def _normalize_call_args(
@@ -105,14 +127,47 @@ def _get_last_diagnostics(api: Dict[str, Callable[..., Any]]) -> str:
     return result
 
 
+def _fail_call(name: str, error: str, **extra: Any) -> Dict[str, Any]:
+    from core.tool_envelope import extract_official_error_code
+
+    out: Dict[str, Any] = {"ok": False, "api": name, "error": error}
+    out.update(extra)
+    code = extract_official_error_code(error)
+    if code:
+        out["upstreamCode"] = code
+    return out
+
+
 def _do_call(api: Dict[str, Callable[..., Any]], name: str, args: List[Any], kwargs: Dict[str, Any]) -> Dict[str, Any]:
     fn = api.get(name)
     if not callable(fn):
         return {"ok": False, "api": name, "error": f"API not found: {name}"}
+    if name == "Help":
+        from core.official_help import help_text_from_invoke, invoke_modelingpy_help
+
+        cmd = ""
+        if args:
+            cmd = "" if args[0] is None else str(args[0])
+        elif kwargs.get("cmd") is not None:
+            cmd = str(kwargs.get("cmd") or "")
+        try:
+            raw, printed = invoke_modelingpy_help(fn, cmd)
+        except Exception as exc:
+            return _fail_call(name, f"{name} failed: {exc}")
+        text = help_text_from_invoke(raw, printed)
+        if not str(text).strip() and cmd:
+            from core.official_help import render_function_help
+
+            target = api.get(cmd)
+            if callable(target):
+                rendered = render_function_help(target)
+                if rendered.strip():
+                    text = rendered
+        return {"ok": True, "api": name, "data": text, "raw": raw}
     try:
         raw = fn(*args, **kwargs)
     except Exception as exc:
-        return {"ok": False, "api": name, "error": f"{name} failed: {exc}"}
+        return _fail_call(name, f"{name} failed: {exc}")
 
     # ClassExist(False) 表示「未加载」，不是 API 失败
     if name == "ClassExist":
@@ -123,7 +178,7 @@ def _do_call(api: Dict[str, Callable[..., Any]], name: str, args: List[Any], kwa
         err_msg = f"{name} returned False"
         if diag:
             err_msg += f"\n{diag}"
-        return {"ok": False, "api": name, "data": raw, "raw": raw, "error": err_msg}
+        return _fail_call(name, err_msg, data=raw, raw=raw)
 
     return {"ok": True, "api": name, "data": raw, "raw": raw}
 
@@ -206,8 +261,17 @@ def main() -> int:
         "ExportResult",
         "ExportResultEx",
         "OpenResult",
+        "RemoveResult",
+        "RemoveResults",
+        "Help",
+        "CompareModel",
+        "ExportDocumentation",
         "GetLastErrors",
         "MessageText",
+        "GetDirectory",
+        "GetSimResultDirectory",
+        "GetRestriction",
+        "GetComponentTypeName",
         "SaveModelAs",
         "SimulateModelEx",
         "StartSimulate",
@@ -259,7 +323,7 @@ def main() -> int:
             mworks_exe = req.get("mworks_exe", "")
             try:
                 if force_start:
-                    api["StartSysplorer"](processPath=str(mworks_exe))
+                    start_sysplorer_in_desktop_context(api["StartSysplorer"], str(mworks_exe))
                 else:
                     port = connect_port
                     if port is None:

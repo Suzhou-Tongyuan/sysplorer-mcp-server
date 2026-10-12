@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "sysplorer_mcp": {
+    "sysplorer": {
       "command": "${MCP_COMMAND}",
       "args": [
         "--mworks-install-dir",

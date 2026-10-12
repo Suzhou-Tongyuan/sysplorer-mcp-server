@@ -1,0 +1,9 @@
+{
+  "英文名": "ty-physical-model-debugging",
+  "中文名": "物理模型调试",
+  "版本号": "1.1.0",
+  "中文功能定位": "独立诊断或修复已有 Modelica 物理模型的具体故障；只诊断不修改，物理修改和交付按需引用主规则。",
+  "英文功能定位": "Independently diagnose or repair failures in existing Sysplorer Modelica physical models, including checks, translation, generated-solvers, initialization, state selection, index reduction, nonlinear systems, events, runtime numerics, and external C functions. Use when a concrete failure or abnormal result exists; do not use for ordinary model construction, domain design, or API lookup.",
+  "中文分类": "Sysplorer物理模型建模与调试",
+  "英文分类": "Sysplorer Physical Modeling & Debugging"
+}

@@ -1,0 +1,9 @@
+{
+  "英文名": "ty-sysblock-signal-modeling",
+  "中文名": "Sysblock 信号与通信建模",
+  "版本号": "1.0.0",
+  "中文功能定位": "进行 Sysblock 信号处理与通信链路建模及验证闭环",
+  "英文功能定位": "Sysblock signal processing and communication link modeling with verification closure",
+  "中文分类": "Sysblock框图模型建模与调试",
+  "英文分类": "Sysblock Diagram Modeling & Debugging"
+}

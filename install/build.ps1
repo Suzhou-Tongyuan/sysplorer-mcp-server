@@ -4,9 +4,9 @@
 .NOTES
   - mworks.sysplorer / pywin32 等需已进入当前 venv；通常从本机 Sysplorer 自带 Python 环境安装同名包到 .venv。
   - 可选环境变量 MWORKS_SYSPLORER_PYTHON：指向 Sysplorer 的 python.exe，脚本会尝试用其 -m pip 向 .venv 安装 mworks / pywin32（若存在对应 wheel）。
-  - 仓库根 resources/ 同步到 dist/resources/：先删除 dist/resources 再 Copy-Item -LiteralPath 整树复制（完整替换）；同步后校验文件/目录数量。目录内任意新增/更新文件（例如 design_opt_mpe_api/参数估计使用说明.md）均随整树一并发布，无需改 .spec。脚本不使用顶层 [CmdletBinding]，避免与部分 PS 版本组合时出现 AmbiguousParameterSet。
+  - 仓库根 resources/ 同步到 dist/resources/：先删除 dist/resources 再 Copy-Item -LiteralPath 整树复制（完整替换）；同步后校验文件/目录数量。目录内任意新增/更新文件（含 modeling_skills/ 下 Markdown）均随整树一并发布，无需改 .spec。脚本不使用顶层 [CmdletBinding]，避免与部分 PS 版本组合时出现 AmbiguousParameterSet。
   - 全部完成后在 dist/ 生成发布包：sysplorer_mcp_server_v{versionFull}.7z（已安装 7-Zip 时），否则为同名 .zip；打包前会删除 dist 内既有 sysplorer_mcp_server_v*.7z/.zip，避免旧包被打进新归档；先写入 %TEMP% 再移入 dist，避免归档把正在生成的新包打进去。versionFull 与 MCP_BUILD_INFO / exe 一致。
-  - 版本：`install/package_version.json` 的 `version_base`（如 0.1）；内部版（默认）为 `0.1.x`，x=`git rev-list --count HEAD`；加 `-Release` 时仅 `0.1`（与 `install/build_publish.ps1` 发布目录一致）。
+  - 版本：`install/package_version.json` 的 `version_base`（如 0.5）；内部版（默认）为 `0.5.x`，x=`git rev-list --count HEAD`；加 `-Release` 时仅 `0.5`（与 `install/build_publish.ps1` 发布目录一致）。
 #>
 param(
     [string]$RepoRoot = "",
@@ -19,7 +19,7 @@ function Invoke-QuietPip {
     $old = $ErrorActionPreference
     $ErrorActionPreference = "SilentlyContinue"
     try {
-        & $PythonExe -m pip @Args 1>$null 2>$null
+        & $PythonExe -X utf8 -m pip @Args 1>$null 2>$null
     } finally {
         $ErrorActionPreference = $old
     }
@@ -44,6 +44,28 @@ function Copy-MworksSitePackages {
             Copy-Item -Path $_.FullName -Destination $dest -Recurse -Force
         }
     }
+}
+
+function New-VenvWithCandidates {
+    param(
+        [Parameter(Mandatory = $true)][string]$VenvDir,
+        [string[]]$Candidates
+    )
+    foreach ($candidate in $Candidates) {
+        if ([string]::IsNullOrWhiteSpace($candidate)) { continue }
+        try {
+            if ($candidate -eq "py -3.12") {
+                & py -3.12 -m venv $VenvDir 2>$null
+            } else {
+                & $candidate -m venv $VenvDir 2>$null
+            }
+        } catch {
+        }
+        if (Test-Path (Join-Path $VenvDir "Scripts\python.exe")) {
+            return $true
+        }
+    }
+    return $false
 }
 
 $ErrorActionPreference = "Stop"
@@ -76,6 +98,8 @@ function Get-SevenZipExe {
 
 if (-not $RepoRoot) {
     $RepoRoot = (Resolve-Path (Join-Path $InstallDir "..")).Path
+} else {
+    $RepoRoot = (Resolve-Path $RepoRoot).Path
 }
 $VenvDir = Join-Path $InstallDir ".venv"
 $DistDir = Join-Path $RepoRoot "dist"
@@ -93,17 +117,25 @@ if (-not (Test-Path $SpecFile)) { throw "Missing $SpecFile" }
 # --- 1) venv ---
 if (-not (Test-Path (Join-Path $VenvDir "Scripts\python.exe"))) {
     Write-Host "Creating virtual environment..." -ForegroundColor Cyan
-    py -3.12 -m venv $VenvDir 2>$null
-    if (-not (Test-Path (Join-Path $VenvDir "Scripts\python.exe"))) {
-        python -m venv $VenvDir
+    $venvCreated = New-VenvWithCandidates -VenvDir $VenvDir -Candidates @(
+        $MworksSysplorerPython,
+        "py -3.12",
+        "python"
+    )
+    if (-not $venvCreated) {
+        throw "Failed to create virtual environment in $VenvDir"
     }
 }
 $Py = Join-Path $VenvDir "Scripts\python.exe"
-$Pip = Join-Path $VenvDir "Scripts\pip.exe"
 if (-not (Test-Path $Py)) { throw "python.exe not found in $VenvDir" }
 
-& $Py -m pip install --upgrade pip
-& $Pip install -r $ReqFile
+function Invoke-VenvPip {
+    param([string[]]$PipArgs)
+    & $Py -X utf8 -m pip @PipArgs
+}
+
+Invoke-VenvPip -PipArgs @("install", "--upgrade", "pip")
+Invoke-VenvPip -PipArgs @("install", "-r", $ReqFile)
 
 # mworks-sysplorer 通常不在公共 PyPI；尝试静默安装（失败则忽略）
 Write-Host "Trying pip install mworks-sysplorer (optional)..." -ForegroundColor DarkGray
@@ -128,7 +160,7 @@ if (-not (Test-PyImport -PythonExe $Py -Code "import mworks.sysplorer; print('ok
     if ($env:MWORKS_INSTALL_DIR -and (Test-Path $env:MWORKS_INSTALL_DIR)) {
         Copy-MworksSitePackages -MworksInstallDir $env:MWORKS_INSTALL_DIR -VenvSitePackages $site
         # 复制出来的 mworks 仍可能依赖未随包复制的三方模块
-        & $Pip install websocket-client jsonrpcclient psutil 2>$null | Out-Null
+        Invoke-VenvPip -PipArgs @("install", "websocket-client", "jsonrpcclient", "psutil") 2>$null | Out-Null
     }
 }
 
@@ -147,7 +179,7 @@ except Exception as e:
     $ErrorActionPreference = $prev
     Write-Warning @"
 未能在 .venv 中 import mworks.sysplorer。请设置环境变量 MWORKS_INSTALL_DIR 为 Sysplorer 根目录后重试（脚本会复制 External\python64\Lib\site-packages 下的 mworks*），或手动:
-  & '$Pip' install mworks-sysplorer
+  & '$Py' -m pip install mworks-sysplorer
 当前探测输出: $check
 "@
     throw "Prerequisite: mworks.sysplorer not importable in venv."

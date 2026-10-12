@@ -26,7 +26,8 @@ _DECL_RE = re.compile(
     re.MULTILINE,
 )
 _WITHIN_RE = re.compile(r"^\s*within\s+([\w.]+)\s*;", re.MULTILINE)
-_NS_REF_RE = re.compile(r"\b([A-Z][A-Za-z0-9]*)\.")
+# Dotted names only (A.B or A.B.C). LoadLibrary uses the first segment, not every Ident.
+_NS_REF_RE = re.compile(r"\b([A-Z][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)+)")
 _LIB_NAME_VERSION_RE = re.compile(r"^(?P<family>.+?)\s+(?P<version>\d+(?:\.\d+)*(?:\.[A-Za-z0-9]+)*)$")
 _IFACE_CONN_DECL_RE = re.compile(
     r"^\s*([\w.]+)\s+(\w+)\s*(?:\([^;]*?\))?\s*(?:\"([^\"]*)\")?\s*;",

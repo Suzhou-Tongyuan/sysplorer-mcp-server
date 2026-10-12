@@ -30,7 +30,7 @@ find "$DIST_DIR" -mindepth 1 -exec rm -rf -- {} +
 rm -rf "$WORK_PATH/sysplorer_mcp_server" "$WORK_PATH/mworks_mcp_server"
 rm -f "$EXE_SOURCE" "$LEGACY_EXE_SOURCE"
 
-# 与 Windows build.ps1 一致：version_base 来自 install/package_version.json，内部版为 0.1.x（x = git 提交数）
+# 与 Windows build.ps1 一致：version_base 来自 install/package_version.json，内部版为 0.5.x（x = git 提交数）
 "$PYTHON_BIN" "$REPO_ROOT/install/write_build_meta.py" --repo-root "$REPO_ROOT" --mode internal
 
 "$PYTHON_BIN" -m PyInstaller --noconfirm --clean --distpath "$DIST_ROOT" --workpath "$WORK_PATH" "$SPEC_PATH"
@@ -45,9 +45,9 @@ cp -R "$RESOURCES_SOURCE" "$DIST_DIR/resources"
 # 默认不打包超大 BM25 索引（与 Windows build.ps1 / PyInstaller spec 一致）
 find "$DIST_DIR/resources" -type f -name 'modelica_doc_index.json' -delete 2>/dev/null || true
 cp "$REPO_ROOT/sysplorer-mcp-server/requirements.txt" "$DIST_DIR/requirements.txt"
-README_PUBLISH_SRC="$REPO_ROOT/install/windows/README.md"
+README_PUBLISH_SRC="$REPO_ROOT/install/linux/README.md"
 if [ ! -f "$README_PUBLISH_SRC" ]; then
-  printf 'Missing install/windows/README.md: %s\n' "$README_PUBLISH_SRC" >&2
+  printf 'Missing install/linux/README.md: %s\n' "$README_PUBLISH_SRC" >&2
   exit 1
 fi
 cp "$README_PUBLISH_SRC" "$DIST_DIR/README.md"
@@ -74,7 +74,7 @@ chmod +x "$DIST_DIR/sysplorer_mcp_server" "$DIST_DIR/install_mcp.sh"
 "$PYTHON_BIN" "$REPO_ROOT/install/write_build_meta.py" --repo-root "$REPO_ROOT" --dump-mcp-json "$DIST_DIR/MCP_BUILD_INFO.json"
 
 rm -f "$ARCHIVE_PATH"
-tar -czf "$ARCHIVE_PATH" -C "$DIST_DIR" resources install_mcp.sh sysplorer_mcp_server README.md
+tar -czf "$ARCHIVE_PATH" -C "$DIST_DIR" .
 
 printf 'Linux distribution ready: %s\n' "$DIST_DIR"
 printf 'Linux archive ready: %s\n' "$ARCHIVE_PATH"

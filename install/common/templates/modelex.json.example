@@ -1,0 +1,17 @@
+{
+  "servers": {
+    "sysplorer": {
+      "type": "local",
+      "enabled": true,
+      "command": [
+        "${MCP_COMMAND}",
+        "${MAIN_PY}",
+        "--mworks-install-dir",
+        "${MWORKS_INSTALL_DIR}",
+        "--sysplorer-platform-label",
+        "${SYSPLORER_PLATFORM_LABEL}"
+      ],
+      "timeout": 1000000
+    }
+  }
+}

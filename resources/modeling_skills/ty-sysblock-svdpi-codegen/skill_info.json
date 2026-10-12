@@ -1,0 +1,9 @@
+{
+  "英文名": "ty-sysblock-svdpi-codegen",
+  "中文名": "Sysblock SV-DPI 代码生成",
+  "版本号": "1.0.0",
+  "中文功能定位": "为 Sysblock 代码生成结果生成和校验 SV-DPI 包装",
+  "英文功能定位": "Generate and verify SV-DPI wrapper for Sysblock code generation results",
+  "中文分类": "Sysblock框图模型建模与调试",
+  "英文分类": "Sysblock Diagram Modeling & Debugging"
+}

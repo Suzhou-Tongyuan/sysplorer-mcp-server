@@ -1,0 +1,23 @@
+{
+  "version": "1.0",
+  "scenarios": [
+    {
+      "id": "three-phase-supply-network",
+      "path": "templates/scenarios/three-phase-supply-network.json",
+      "label": "Three-phase Supply Network",
+      "summary": "AC source-network-load chain with transformers or lines"
+    },
+    {
+      "id": "boost-converter",
+      "path": "templates/scenarios/boost-converter.json",
+      "label": "Boost Converter",
+      "summary": "Basic DC-DC boost topology with PWM control"
+    },
+    {
+      "id": "grid-tied-two-level-inverter",
+      "path": "templates/scenarios/grid-tied-two-level-inverter.json",
+      "label": "Grid-tied Two-level Inverter",
+      "summary": "DC bus, converter bridge, filter, PLL, and grid connection"
+    }
+  ]
+}

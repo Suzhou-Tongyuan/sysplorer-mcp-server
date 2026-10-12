@@ -1,0 +1,9 @@
+{
+  "英文名": "ty-nps-library-modeling",
+  "中文名": "TY NPS 库建模",
+  "版本号": "1.1.0",
+  "中文功能定位": "在已经应用 ty-sysplorer-modeling-rules 之后，于 Sysplorer 内置商业库 `NPSLibrary` 范围内执行电力电子、电机驱动、电源网络、故障保护与潮流相关模型的新建、修复、验证与结果复核。若提示词中未出现 `NPSLibrary`，且未明确要求走内置库/商业库路径来完成相关 NPS 场景任务，则禁止触发或使用本 skill。",
+  "英文功能定位": "After ty-sysplorer-modeling-rules has been applied, build, repair, validate, and review power-electronics, motor-drive, source-network, fault-protection, and load-flow models within Sysplorer's built-in commercial `NPSLibrary`. Do not trigger or use this skill if the prompt does not mention `NPSLibrary` and does not explicitly require the built-in library / commercial library path to complete related NPS tasks.",
+  "中文分类": "Sysplorer 物理模型建模与调试",
+  "英文分类": "Sysplorer Physical Modeling & Debugging"
+}

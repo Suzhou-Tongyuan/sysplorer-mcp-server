@@ -1,0 +1,9 @@
+﻿{
+  "英文名": "ty-hydraulic-pneumatic-modeling",
+  "中文名": "TY 液压气动建模",
+  "版本号": "1.1.3",
+  "中文功能定位": "在 ty-sysplorer-modeling-rules 之后，为明确指定、上下文或已有模型已选定，或父级依据标准库功能缺口补充的 TY 液压、热液压和气动组件提供领域指导。库清单仅约束负责的流体子系统，保留已选标准库及跨域组件；验证与报告不超出用户验收范围。",
+  "英文功能定位": "After ty-sysplorer-modeling-rules, support TY hydraulic, thermal-hydraulic and pneumatic components selected explicitly, in effective context or an existing model, or to fill evidenced standard-library gaps. Scope library restrictions to the responsible subsystem, preserve selected standard and cross-domain components, and inherit user validation and reporting scope.",
+  "中文分类": "Sysplorer 物理模型建模与调试",
+  "英文分类": "Sysplorer Physical Modeling & Debugging"
+}

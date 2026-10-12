@@ -1,0 +1,7 @@
+interface:
+  display_name: "TY NPS Library Modeling"
+  short_description: "Use only for explicit NPSLibrary or Sysplorer built-in commercial-library modeling tasks; prefer Sysplorer MCP for modeling and Syslab MCP only for script or algorithm work."
+  default_prompt: "Use $ty-nps-library-modeling only after confirming the task explicitly targets NPSLibrary or Sysplorer built-in/commercial-library modeling. Keep graphical modeling, component creation, wiring, check, translate, and simulate work on Sysplorer MCP; reserve Syslab MCP for script, Julia, Python, algorithm, or data-processing subtasks. Prefer references/nps_component_quick_index.md, references/component_fallback_strategy.md, and Sysplorer 2026a\\Docs\\EleLib\\Samples\\NPSLibrary before deep manual traversal."
+
+policy:
+  allow_implicit_invocation: true

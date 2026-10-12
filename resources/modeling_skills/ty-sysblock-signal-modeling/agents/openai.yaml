@@ -1,0 +1,8 @@
+interface:
+  display_name: "Sysblock 信号与通信建模"
+  short_description: "在父级分流到 Sysblock 后，用于信号处理、通信链路和频谱/BER 验证"
+  default_prompt: "先应用 ty-sysplorer-modeling-rules 并确认任务已分流到 Sysblock 路径，再使用 $ty-sysblock-signal-modeling 处理滤波、频谱、多速率、特征提取、基带链路、BER、QPSK/QAM、同步或 DSSS 等任务。"
+
+policy:
+  allow_implicit_invocation: true
+

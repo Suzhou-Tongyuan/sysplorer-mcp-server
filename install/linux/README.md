@@ -6,12 +6,12 @@ Linux now has a packaging path for layout validation, config installation, and a
 
 The current `sysplorer_mcp_server` runtime is still not feature-complete on Linux.
 
-Windows-only dependencies remain in the codebase, including:
+Linux still depends on a Sysplorer runtime layout and Python API that are not yet guaranteed to match Windows feature-for-feature, especially around:
 
 - `mworks.sysplorer`
-- Windows process discovery and kill commands such as `tasklist`, `wmic`, and `taskkill`
-- Windows solver/runtime binaries such as `MWSolver.exe`
-- Windows registry PATH recovery
+- Sysplorer native runtime availability on Linux
+- solver/runtime binary naming and layout differences between installs
+- process and environment handling that historically came from Windows-first assumptions
 
 Because of those dependencies, the Linux package is **limited support**, not full parity with Windows.
 
@@ -19,7 +19,7 @@ Because of those dependencies, the Linux package is **limited support**, not ful
 
 - build a Linux distribution folder under `install/dist/linux-x64/`
 - build a native Linux executable with PyInstaller
-- install `sysplorer_mcp` entries into Claude Code and OpenCode config files
+- install `sysplorer` entries into Claude Code, OpenCode, Codex, and Modelex config files
 - validate package layout, binary startup, templates, and client wiring on a Linux machine
 
 ## What It Does Not Promise
@@ -30,9 +30,9 @@ Because of those dependencies, the Linux package is **limited support**, not ful
 
 ## Scripts
 
-- `scripts/build_publish.sh` — 与 Windows 上 `install/build_publish.ps1` 等价：生成 `publish/sysplorer_mcp/`（`main.py`、`sysplorer-mcp-server/`、`resources/`、`MCP_BUILD_INFO.json`、`README.md`（自 `install/windows/README.md` 复制）、`install_mcp.sh`）。**不包含** PyInstaller / exe。
+- `scripts/build_publish.sh` — 与 Windows 上 `install/build_publish.ps1` 等价：生成 `publish/sysplorer_mcp/`（`main.py`、`sysplorer-mcp-server/`、`resources/`、`MCP_BUILD_INFO.json`、`README.md`（自 `install/linux/README.md` 复制）、`install_mcp.sh`、`install_mcp_silent.py`）。**不包含** PyInstaller / exe。
 - `scripts/build.sh` — Linux 原生可执行文件 + `tar.gz`（PyInstaller）；与 Windows `install/build.ps1` 的 exe 流程对应；若仅需源码发布目录请用 `build_publish.sh`。
-- `scripts/install_mcp.sh` — 一键写入 Claude / OpenCode / Codex 配置；自动识别**源码包**（存在 `main.py` 与 `sysplorer-mcp-server/`）或**二进制包**（存在 `sysplorer_mcp_server`）。
+- `scripts/install_mcp.sh` — 一键写入 Claude / OpenCode / Codex / Modelex 配置；自动识别**源码包**（存在 `main.py` 与 `sysplorer-mcp-server/`）或**二进制包**（存在 `sysplorer_mcp_server`）。在存在 `resources/modeling_skills` 时，还会调用包内 **`install_mcp_silent.py --sync-opencode-skills`**（或仓库 `install/install_mcp_silent.py`）将技能同步到 **`$HOME/.config/opencode/skills/`** 与 **`$HOME/.modelex/skills/`**（白名单逐目录替换，不清空 `skills` 根）。跳过：环境变量 **`NO_SYNC_OPENCODE_SKILLS=1`**。
 
 ## 发布目录（推荐，与 ps1 发布一致）
 
@@ -55,7 +55,7 @@ cd publish/sysplorer_mcp
 bash ./install_mcp.sh
 ```
 
-可选参数与环境变量：`./install_mcp.sh -d /opt/MWORKS/Sysplorer-2026a -p 'Sysplorer 2026a'`，或设置 `MWORKS_INSTALL_DIR`、`SYSPLORER_PLATFORM_LABEL`。
+可选参数与环境变量：`./install_mcp.sh -d /opt/MWORKS/Sysplorer-2026a -p 'Sysplorer 2026b'`，或设置 `MWORKS_INSTALL_DIR`、`SYSPLORER_PLATFORM_LABEL`。
 
 ## Build（PyInstaller 二进制分发）
 
@@ -78,7 +78,7 @@ The build output is written to `install/dist/linux-x64/`.
 
 - `sysplorer_mcp_server` 可执行文件
 - `install_mcp.sh`、`.mcp.json.example`、`claude.desktop.json.example`、`opencode.json.example`
-- `requirements.txt`、`README.md`（自 `install/windows/README.md` 复制）、`manifest.json`
+- `requirements.txt`、`README.md`（自 `install/linux/README.md` 复制）、`manifest.json`
 
 ## Install on Target Machine
 
@@ -163,9 +163,10 @@ Then verify:
 
 - [ ] `~/.claude.json` exists
 - [ ] `~/.config/opencode/opencode.json` exists
-- [ ] `~/.codex/config.toml` contains `[mcp_servers.sysplorer_mcp]`（`install_mcp.sh` 会写入）
-- [ ] `mcpServers.sysplorer_mcp.command` 指向 Python 可执行文件（源码包）或 `sysplorer_mcp_server` 路径（二进制包）
-- [ ] `mcp.sysplorer_mcp.type` equals `local`
+- [ ] `~/.codex/config.toml` contains `[mcp_servers.sysplorer]`（`install_mcp.sh` 会写入）
+- [ ] `mcpServers.sysplorer.command` 指向 Python 可执行文件（源码包）或 `sysplorer_mcp_server` 路径（二进制包）
+- [ ] `mcp.sysplorer.type` equals `local`
+- [ ] `~/.modelex/mcp.json` contains `servers.sysplorer` with `enabled: true`
 - [ ] 上述配置均含 `--mworks-install-dir` 与 `--sysplorer-platform-label`
 
 Recommended command:
@@ -175,8 +176,10 @@ python3 - <<'PY'
 import json, pathlib
 claude = pathlib.Path.home() / '.claude.json'
 opencode = pathlib.Path.home() / '.config' / 'opencode' / 'opencode.json'
-print(json.dumps(json.loads(claude.read_text(encoding='utf-8'))['mcpServers']['sysplorer_mcp'], indent=2, ensure_ascii=False))
-print(json.dumps(json.loads(opencode.read_text(encoding='utf-8'))['mcp']['sysplorer_mcp'], indent=2, ensure_ascii=False))
+print(json.dumps(json.loads(claude.read_text(encoding='utf-8'))['mcpServers']['sysplorer'], indent=2, ensure_ascii=False))
+print(json.dumps(json.loads(opencode.read_text(encoding='utf-8'))['mcp']['sysplorer'], indent=2, ensure_ascii=False))
+modelex = pathlib.Path.home() / '.modelex' / 'mcp.json'
+print(json.dumps(json.loads(modelex.read_text(encoding='utf-8'))['servers']['sysplorer'], indent=2, ensure_ascii=False))
 PY
 ```
 
@@ -184,7 +187,7 @@ PY
 
 After restarting Claude Code or OpenCode:
 
-- [ ] the client can see the `sysplorer_mcp` entry
+- [ ] the client can see the `sysplorer` entry
 - [ ] launching the MCP process does not immediately fail because of missing script permissions
 - [ ] the process at least reaches binary startup and argument parsing
 
@@ -195,11 +198,13 @@ Suggested checks:
 
 ### 7. Expected Linux Limitation Check
 
+**ctypes：** 不要在会被 `main.py` 启动 import 的模块顶层写 `import ctypes`。Sysplorer 自带 Linux Python 加载 `_ctypes`/`libffi` 失败时进程会立刻退出。Windows 专用逻辑须先判断操作系统，再在函数内 import。说明见 `sysplorer-mcp-server/README.md`「禁止在模块顶层 import ctypes」。
+
 These outcomes are currently acceptable on Linux:
 
 - [ ] `session_manager` may fail because `mworks.sysplorer` is unavailable
 - [ ] Sysplorer/model/simulation tools may fail because the runtime is Windows-dependent
-- [ ] failures mentioning `tasklist`, `wmic`, `taskkill`, `mworks.sysplorer`, or `MWSolver.exe` are consistent with the current support boundary
+- [ ] failures mentioning missing `mworks.sysplorer`, missing Linux Sysplorer runtime files, or unsupported native APIs are consistent with the current support boundary
 
 ### 8. Pass Criteria
 

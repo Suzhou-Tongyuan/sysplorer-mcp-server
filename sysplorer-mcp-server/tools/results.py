@@ -4,19 +4,42 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, List, Optional
 
-from mcp_instance import mcp
+from mcp_instance import mcp, readonly_annotations, writable_annotations
 from core.result_variables import discover_result_variables_via_model, truncate_result_variable_list
 from core.utils import _json
 from state import _get_driver
 
 
-def _summarize_series(data: Any) -> Any:
-    """Reduce a large numeric list to a compact KPI summary dict."""
-    if not isinstance(data, (list, tuple)) or len(data) <= 20:
+def _to_plain_sequence(data: Any) -> Any:
+    """Turn numpy arrays / array-likes into nested lists for summarization."""
+    if data is None or isinstance(data, (str, bytes, dict)):
         return data
+    tolist = getattr(data, "tolist", None)
+    if callable(tolist):
+        try:
+            return tolist()
+        except Exception:
+            return data
+    return data
+
+
+def _summarize_series(data: Any) -> Any:
+    """Reduce a large numeric series to count/first/last/min/max/mean.
+
+    Official ``GetVarsValues`` is a list of per-variable series (optionally numpy
+    arrays), not a row-wise ``[t, v1, …]`` table. Nested sequences are summarized
+    one series at a time so the outer list-of-arrays is not passed through raw.
+    """
+    data = _to_plain_sequence(data)
+    if not isinstance(data, (list, tuple)):
+        return data
+    if data and isinstance(_to_plain_sequence(data[0]), (list, tuple)):
+        return [_summarize_series(item) for item in data]
+    if len(data) <= 20:
+        return list(data)
     nums = [float(x) for x in data if isinstance(x, (int, float))]
     if not nums:
-        return data
+        return list(data)
     return {
         "count": len(nums),
         "first": nums[0],
@@ -27,9 +50,25 @@ def _summarize_series(data: Any) -> Any:
     }
 
 
+def _summarize_vars_values(data: Any, names: List[str]) -> Any:
+    """Map ``GetVarsValues`` payload onto ``var_names`` and summarize each series."""
+    data = _to_plain_sequence(data)
+    if isinstance(data, dict):
+        return {str(k): _summarize_series(v) for k, v in data.items()}
+    if isinstance(data, (list, tuple)):
+        series = [_summarize_series(item) for item in data]
+        clean = [str(x).strip() for x in names if str(x).strip()]
+        if clean and len(clean) == len(series):
+            return {clean[i]: series[i] for i in range(len(clean))}
+        return series
+    return _summarize_series(data)
+
+
 MWORKS_RESULT_MANAGER_ACTIONS = frozenset(
     {
         "open_result",
+        "remove_result",
+        "remove_results",
         "get_result_variables",
         "get_result_variable_info",
         "get_var_values",
@@ -43,7 +82,7 @@ MWORKS_RESULT_MANAGER_ACTIONS = frozenset(
 MWORKS_PLOT_MANAGER_ACTIONS = frozenset({"plot_variables", "create_animation"})
 
 
-@mcp.tool()
+@mcp.tool(annotations=writable_annotations())
 def result_manager(
     action: str,
     result_file: str = "",
@@ -59,20 +98,17 @@ def result_manager(
     model_discovery_max_instances: int = 120,
     model_discovery_max_probes: int = 400,
 ) -> str:
-    """
-    仿真结果统一入口（打开结果、列变量、读时序、读时刻值、时间轴）。
+    """Simulation results: open/close, list variables, read series or values at a time.
 
-    action:
-      open_result — 显式 ``OpenResult(path)``；工作流默认不依赖磁盘路径推断结果。
-      get_result_variables — 优先策略：若提供 ``model_name`` 且未设 ``list_all_result_variables``，
-        用 ``GetComponents``+``GetComponentPorts`` 拼候选名并以 ``GetResultVariableInfo`` 确认（无超大全量列表）。
-        否则调用 ``GetResultVariables(var_type)``，超长列表会截断至 ``max_variables_returned``。
-      get_result_variable_info — 需要 ``var_name`` 与 ``info_type``（如 Type、Unit、Variability、Description）。
-      get_var_values — 需要 var_name。
-      get_var_value_at — 需要 var_name；可选 time_point（begin/end 或数值）。
-      get_vars_values — 需要 var_names（列表）；长时序会摘要。
-      get_vars_value_at — 需要 var_names；可选 time_point。
-      get_var_times — 无额外参数。
+    | action | required |
+    |--------|----------|
+    | ``open_result`` | ``result_file`` |
+    | ``remove_result`` / ``remove_results`` | none |
+    | ``get_result_variables`` | optional ``model_name`` (empty scope falls back to official list) |
+    | ``get_result_variable_info`` | ``var_name`` |
+    | ``get_var_values`` / ``get_var_value_at`` | ``var_name`` |
+    | ``get_vars_values`` / ``get_vars_value_at`` | ``var_names`` |
+    | ``get_var_times`` | none |
     """
     act = (action or "").strip().lower()
     if act not in MWORKS_RESULT_MANAGER_ACTIONS:
@@ -89,6 +125,10 @@ def result_manager(
         if act == "open_result":
             result = _get_driver().open_result(result_file=result_file)
             return _get_driver().as_json(result)
+        if act == "remove_result":
+            return _get_driver().as_json(_get_driver().remove_result())
+        if act == "remove_results":
+            return _get_driver().as_json(_get_driver().remove_results())
         if act == "get_result_variable_info":
             result = _get_driver().get_result_variable_info(
                 var_name=var_name, info_type=info_type or "Type"
@@ -106,19 +146,64 @@ def result_manager(
                     max_instances=max(1, int(model_discovery_max_instances)),
                     max_probes=max(1, int(model_discovery_max_probes)),
                 )
-                out = {
-                    "ok": disc.get("ok", False),
-                    "api": "GetResultVariableInfo",
-                    "strategy": "model_scoped",
+                scoped = list(disc.get("variables") or [])
+                if scoped:
+                    out = {
+                        "ok": disc.get("ok", False),
+                        "api": "GetResultVariableInfo",
+                        "strategy": "model_scoped",
+                        "model_name": mn,
+                        "data": scoped,
+                        "variable_count": disc.get("variable_count", len(scoped)),
+                        "probes_attempted": disc.get("probes_attempted", 0),
+                        "instances_scanned": disc.get("instances_scanned", 0),
+                        "candidates_built": disc.get("candidates_built", 0),
+                        "sample_details": disc.get("sample_details", []),
+                    }
+                    if not disc.get("ok"):
+                        out["error"] = disc.get("error", "model-scoped discovery failed")
+                    return _json(out)
+                result = drv.get_result_variables(var_type=var_type)
+                base = result.to_dict()
+                scoped_meta = {
                     "model_name": mn,
-                    "data": disc.get("variables", []),
-                    "variable_count": disc.get("variable_count", 0),
+                    "model_scoped_variable_count": 0,
                     "probes_attempted": disc.get("probes_attempted", 0),
                     "instances_scanned": disc.get("instances_scanned", 0),
                     "candidates_built": disc.get("candidates_built", 0),
-                    "sample_details": disc.get("sample_details", []),
                 }
-                if not disc.get("ok"):
+                official = base.get("data")
+                if result.ok and isinstance(official, list) and official:
+                    trimmed, total, trunc = truncate_result_variable_list(official, cap)
+                    base["data"] = trimmed
+                    base["variable_count"] = total
+                    base["truncated"] = trunc
+                    base["max_variables_returned"] = cap
+                    base["strategy"] = "full_list"
+                    base["fallback_from"] = "model_scoped"
+                    base.update(scoped_meta)
+                    base["hint"] = (
+                        "model_scoped found no result names; used official GetResultVariables. "
+                        "Pass list_all_result_variables=true to skip scoping."
+                    )
+                    return _json(base)
+                out = {
+                    "ok": bool(result.ok and disc.get("ok", True)),
+                    "api": "GetResultVariables",
+                    "strategy": "model_scoped",
+                    "data": [],
+                    "variable_count": 0,
+                    "hint": (
+                        "model_scoped and GetResultVariables are both empty. "
+                        "Simulate or open_result first; or pass list_all_result_variables=true."
+                    ),
+                }
+                out.update(scoped_meta)
+                if not result.ok:
+                    out["ok"] = False
+                    out["error"] = result.error or "GetResultVariables failed"
+                elif not disc.get("ok"):
+                    out["ok"] = False
                     out["error"] = disc.get("error", "model-scoped discovery failed")
                 return _json(out)
             result = drv.get_result_variables(var_type=var_type)
@@ -140,14 +225,11 @@ def result_manager(
             result = _get_driver().get_var_value_at(var_name=var_name, time_point=time_point)
             return _get_driver().as_json(result)
         if act == "get_vars_values":
-            names = var_names or []
+            names = [str(x).strip() for x in (var_names or []) if str(x).strip()]
             result = _get_driver().get_vars_values(var_names=names)
             out = result.to_dict()
-            data = out.get("data")
-            if isinstance(data, dict):
-                out["data"] = {k: _summarize_series(v) for k, v in data.items()}
-            elif isinstance(data, (list, tuple)):
-                out["data"] = _summarize_series(data)
+            out["data"] = _summarize_vars_values(out.get("data"), names)
+            out["layout"] = "one_series_per_requested_name"
             return _json(out)
         if act == "get_vars_value_at":
             names = var_names or []
@@ -161,6 +243,8 @@ def result_manager(
     except Exception as exc:
         api_map = {
             "open_result": "OpenResult",
+            "remove_result": "RemoveResult",
+            "remove_results": "RemoveResults",
             "get_result_variables": "GetResultVariables",
             "get_result_variable_info": "GetResultVariableInfo",
             "get_var_values": "GetVarValues",
@@ -174,7 +258,7 @@ def result_manager(
     return _json({"ok": False, "tool": "result_manager", "error": f"internal: unhandled action {act!r}"})
 
 
-@mcp.tool()
+@mcp.tool(annotations=readonly_annotations())
 def plot_manager(
     action: str,
     variables: Optional[List[str]] = None,
@@ -182,13 +266,9 @@ def plot_manager(
     clear_first: bool = False,
     result_file: str = "",
 ) -> str:
-    """
-    仿真结果可视化统一入口（Sysplorer 内绘图、动画）。
+    """Plot or animate the current simulation result.
 
-    action:
-      plot_variables — 需要 ``variables``（非空列表）；可选 ``heading``、``clear_first``、``result_file``
-        （非空时先 ``OpenResult`` 再绘图）。
-      create_animation — 创建动画；其余参数可忽略。
+    ``plot_variables`` needs ``variables``. ``create_animation`` needs none.
     """
     act = (action or "").strip().lower()
     if act not in MWORKS_PLOT_MANAGER_ACTIONS:

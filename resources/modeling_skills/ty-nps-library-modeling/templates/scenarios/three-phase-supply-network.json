@@ -1,0 +1,43 @@
+{
+    "id":  "three-phase-supply-network",
+    "system_type":  "three-phase supply network",
+    "modeling_objective":  "Build a minimum AC source-line-transformer-load network and verify basic voltage, current, and power transfer behavior.",
+    "main_power_path":  [
+                            "three-phase source",
+                            "line or cable",
+                            "transformer if needed",
+                            "load"
+                        ],
+    "mandatory_support_blocks":  [
+                                     "ground or reference",
+                                     "Powergui",
+                                     "voltage measurement",
+                                     "current measurement"
+                                 ],
+    "required_parameters":  [
+                                "rated voltage",
+                                "frequency",
+                                "line impedance or length",
+                                "transformer ratio if used",
+                                "load type and rating"
+                            ],
+    "key_results":  [
+                        "node voltage",
+                        "line current",
+                        "active power",
+                        "reactive power"
+                    ],
+    "simulation_baseline":  {
+                                "solver_requirement":  "Algorithm=InlineImplicitEuler",
+                                "annotation_requirement":  "experiment(Algorithm=InlineImplicitEuler, InlineIntegrator=true, InlineStepSize=false, Interval=<step>, StartTime=0, StopTime=2, Tolerance=0.0001, IntegratorStep=<step>, StoreEventValue=0)",
+                                "default_step":  "5e-5",
+                                "step_rule":  "choose <step> from PWM frequency, fastest physical sampling step, or control period; keep Interval and IntegratorStep equal; use step <= fastest relevant period / 10 when no stronger rule exists",
+                                "must_record":  [
+                                                    "Algorithm=InlineImplicitEuler",
+                                                    "InlineIntegrator",
+                                                    "Interval",
+                                                    "IntegratorStep",
+                                                    "frequency"
+                                                ]
+                            }
+}

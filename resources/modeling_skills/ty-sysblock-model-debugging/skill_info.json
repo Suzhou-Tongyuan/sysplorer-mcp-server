@@ -1,0 +1,9 @@
+{
+  "英文名": "ty-sysblock-model-debugging",
+  "中文名": "Sysblock 模型调试",
+  "版本号": "1.1.0",
+  "中文功能定位": "独立诊断或修复已有 Sysblock/CCaller 的具体故障；编辑和交付引用框图/信号规则，按所需终端阶段验收。",
+  "英文功能定位": "Independently diagnose or repair failures in existing Sysplorer Sysblock diagrams, including components, ports, connections, parameters, sample times, simulation, code generation, generated solvers, and CCaller source/configuration. Use for a concrete failure or abnormal result; do not use for new diagram construction, routine layout, controller tuning, or pure API lookup.",
+  "中文分类": "Sysblock框图模型建模与调试",
+  "英文分类": "Sysblock Diagram Modeling & Debugging"
+}

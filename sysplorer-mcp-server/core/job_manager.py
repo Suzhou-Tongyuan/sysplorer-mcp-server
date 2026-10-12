@@ -70,11 +70,6 @@ class JobManager:
                     model_type=str(pl.get("model_type", "MODELICA")),
                     stop_on_error=bool(pl.get("stop_on_error", False)),
                     reload_mo_path=str(pl.get("reload_mo_path", "") or ""),
-                    smart_layout_graph_json=str(pl.get("smart_layout_graph_json", "") or ""),
-                    smart_layout_graph_json_path=str(pl.get("smart_layout_graph_json_path", "") or ""),
-                    smart_layout_model_path=str(pl.get("smart_layout_model_path", "") or ""),
-                    smart_layout_output_json_path=str(pl.get("smart_layout_output_json_path", "") or ""),
-                    smart_layout_timeout_seconds=int(pl.get("smart_layout_timeout_seconds", 120)),
                 )
                 out = json.loads(raw)
                 if out.get("ok"):
@@ -94,11 +89,6 @@ class JobManager:
                     run_to=str(pl.get("run_to", "MAKING")),
                     config_json=str(pl.get("config_json", "") or ""),
                     reload_mo_path=str(pl.get("reload_mo_path", "") or ""),
-                    smart_layout_graph_json=str(pl.get("smart_layout_graph_json", "") or ""),
-                    smart_layout_graph_json_path=str(pl.get("smart_layout_graph_json_path", "") or ""),
-                    smart_layout_model_path=str(pl.get("smart_layout_model_path", "") or ""),
-                    smart_layout_output_json_path=str(pl.get("smart_layout_output_json_path", "") or ""),
-                    smart_layout_timeout_seconds=int(pl.get("smart_layout_timeout_seconds", 120)),
                 )
                 out = json.loads(raw)
                 if out.get("ok"):
@@ -118,11 +108,6 @@ class JobManager:
                     verify_time_point=pl.get("verify_time_point", "end"),
                     result_var_type=int(pl.get("result_var_type", 0)),
                     reload_mo_path=str(pl.get("reload_mo_path", "") or ""),
-                    smart_layout_graph_json=str(pl.get("smart_layout_graph_json", "") or ""),
-                    smart_layout_graph_json_path=str(pl.get("smart_layout_graph_json_path", "") or ""),
-                    smart_layout_model_path=str(pl.get("smart_layout_model_path", "") or ""),
-                    smart_layout_output_json_path=str(pl.get("smart_layout_output_json_path", "") or ""),
-                    smart_layout_timeout_seconds=int(pl.get("smart_layout_timeout_seconds", 120)),
                 )
                 out = json.loads(raw)
                 if out.get("ok"):

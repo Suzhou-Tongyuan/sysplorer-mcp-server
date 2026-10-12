@@ -1,0 +1,9 @@
+﻿{
+  "英文名": "ty-mechanical-modeling",
+  "中文名": "TY 机械系统建模",
+  "版本号": "1.1.3",
+  "中文功能定位": "在 ty-sysplorer-modeling-rules 之后，为明确指定、上下文或已有模型已选定，或父级依据标准库功能缺口补充的 TY 商业机械组件提供领域指导。保留标准库与商业库组合及其他已选领域；纯标准库或自建机械任务仍由父级处理。验证深度、图面证据和正式报告范围继承用户验收要求。",
+  "英文功能定位": "After ty-sysplorer-modeling-rules, support TY mechanical components selected explicitly, in effective prior context or an existing model, or by the parent to fill evidenced standard-library gaps. Keep selected standard and cross-domain components. Pure standard-library/custom mechanical tasks remain with the parent. Inherit requested validation, diagram evidence and report scope.",
+  "中文分类": "Sysplorer 物理模型建模与调试",
+  "英文分类": "Sysplorer Physical Modeling & Debugging"
+}

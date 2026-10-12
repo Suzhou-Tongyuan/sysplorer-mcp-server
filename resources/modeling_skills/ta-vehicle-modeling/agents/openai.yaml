@@ -1,0 +1,7 @@
+interface:
+  display_name: "TA 车辆库建模"
+  short_description: "已应用 ty-sysplorer-modeling-rules 后，所有车辆/整车/子系统建模与仿真任务的领域补丁"
+  default_prompt: "凡任务涉及车辆、整车、汽车子系统、滑行/加速/制动/循环工况、动力性、经济性、续航、操稳、平顺性、热管理、发动机、电池、低压电器、传动、轮胎、悬架、制动、转向、车辆模型修复或结果曲线核验，请在已应用 ty-sysplorer-modeling-rules 后调用 $ta-vehicle-modeling。若明确涉及 TAEconomy、TADynamics、TAThermalSystem、TAEngine、TABattery、TAElectronic 或 TA 车辆库，则优先按 TA 六库流程；若用户要求简单集总参数模型，也仍调用本技能进行车辆领域分流与验证。"
+
+policy:
+  allow_implicit_invocation: true

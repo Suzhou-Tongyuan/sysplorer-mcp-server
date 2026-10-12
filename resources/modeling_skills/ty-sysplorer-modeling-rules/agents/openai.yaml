@@ -1,0 +1,6 @@
+interface:
+  display_name: "Sysplorer 建模总规则"
+  short_description: "Modelica 物理与混合建模，以及显式 Documentation 维护"
+  default_prompt: "使用 $ty-sysplorer-modeling-rules 处理具体的 Modelica 物理或混合建模任务；仅当我明确要求时，再为 Modelica 模型、案例或测试对象生成或同步 Documentation 帮助信息。"
+policy:
+  allow_implicit_invocation: true

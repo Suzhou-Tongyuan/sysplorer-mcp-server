@@ -1,0 +1,4 @@
+interface:
+  display_name: "Sysplorer Dependency Guard"
+  short_description: "Sysplorer model-library dependency preparation guard"
+  default_prompt: "Use $ty-sysplorer-dependency-guard to resolve, download, install, refresh, load, and verify missing Sysplorer model-library dependencies before continuing."

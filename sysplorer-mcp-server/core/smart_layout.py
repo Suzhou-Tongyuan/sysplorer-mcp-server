@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import heapq
 import json
-import re
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -18,15 +17,6 @@ from constants import (
     _SL_CIRC_RAIL_Y, _SL_CIRC_GND_Y, _SL_CIRC_GND_SYM_Y,
     _SL_CIRC_SIG_Y, _SL_CIRC_COMP_HW, _SL_CIRC_COMP_HH,
 )
-
-# ── Regex only used by this module ────────────────────────────────────────────
-_PLACEMENT_RE = re.compile(
-    r"Placement\s*\(\s*transformation\s*\(\s*extent\s*=\s*\{\{[^}]*\}[^}]*\}\}[^)]*\)\s*\)"
-)
-_CONNECT_CORE_RE = re.compile(
-    r"^\s*connect\(\s*([A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*)\s*,\s*([A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*)\s*\)"
-)
-
 
 def _fmt_layout_num(value: float) -> str:
     try:
@@ -163,6 +153,7 @@ def _is_circuit_mode(children: List[Dict[str, Any]]) -> bool:
     if not children:
         return False
     elec = 0
+    coupled_or_mechanical = 0
     for node in children:
         nid = str(node.get("id", ""))
         pnames = {
@@ -175,6 +166,10 @@ def _is_circuit_mode(children: List[Dict[str, Any]]) -> bool:
         has_fluid = bool({"port_a", "port_b", "inlet", "outlet"} & pnames)
         if has_elec and not has_mech and not has_fluid:
             elec += 1
+        elif has_mech:
+            coupled_or_mechanical += 1
+    if coupled_or_mechanical:
+        return False
     return (elec / max(len(children), 1)) >= _SL_CIRCUIT_MODE_THRESHOLD
 
 
@@ -507,6 +502,58 @@ def _circuit_layout_engine(
     return result
 
 
+def _layout_node_id_from_port(port_id: str, port_to_node: Dict[str, str]) -> str:
+    pid = str(port_id)
+    return port_to_node.get(pid, pid.split(".")[0])
+
+
+def _classify_layout_satellites(
+    children: List[Dict[str, Any]],
+    edges: List[Dict[str, Any]],
+    port_to_node: Dict[str, str],
+    node_by_id: Dict[str, Dict[str, Any]],
+) -> set:
+    """One-port nodes are satellites only when attached to a multi-port main node.
+
+    A single port on the layout graph (often only the connectors that appear in
+    ``connect()``) does not by itself mean a satellite. Two one-port components
+    wired together are the main topology, not a pair of hanging satellites.
+    """
+    one_port: set = set()
+    for node in children:
+        nid = str(node.get("id", ""))
+        ports = [pp for pp in (node.get("ports") or []) if isinstance(pp, dict)]
+        if nid and len(ports) == 1:
+            one_port.add(nid)
+    if not one_port:
+        return set()
+
+    attached_to_main: set = set()
+    for edge in edges:
+        srcs_e = list(edge.get("sources") or [])
+        tgts_e = list(edge.get("targets") or [])
+        for s_pid_e in srcs_e:
+            s_nid_e = _layout_node_id_from_port(s_pid_e, port_to_node)
+            for t_pid_e in tgts_e:
+                t_nid_e = _layout_node_id_from_port(t_pid_e, port_to_node)
+                if s_nid_e == t_nid_e:
+                    continue
+                if s_nid_e in one_port and t_nid_e not in one_port and t_nid_e in node_by_id:
+                    attached_to_main.add(s_nid_e)
+                if t_nid_e in one_port and s_nid_e not in one_port and s_nid_e in node_by_id:
+                    attached_to_main.add(t_nid_e)
+
+    if not any(nid not in attached_to_main for nid in node_by_id):
+        return set()
+    return attached_to_main
+
+
+def _bbox_center(xs: List[float], ys: List[float]) -> Tuple[float, float]:
+    if not xs or not ys:
+        return 0.0, 0.0
+    return (min(xs) + max(xs)) / 2.0, (min(ys) + max(ys)) / 2.0
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # Original block-diagram layout engine
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -573,15 +620,10 @@ def _smart_layout_engine(graph: Dict[str, Any]) -> Dict[str, Any]:
             if side:
                 port.setdefault("properties", {}).setdefault("port.side", side)
 
-    # ── 2.5. Identify satellite nodes ────────────────────────────────────────
-    satellite_nodes: set = set()
+    # ── 2.5. Identify satellite nodes (one-port hanging off a multi-port hub)
+    satellite_nodes = _classify_layout_satellites(children, edges, port_to_node, node_by_id)
     satellite_connected_to: Dict[str, str] = {}
     satellite_edge_ports: Dict[str, Tuple[str, str]] = {}
-    for node in children:
-        nid = str(node.get("id", ""))
-        ports = [pp for pp in (node.get("ports") or []) if isinstance(pp, dict)]
-        if len(ports) == 1:
-            satellite_nodes.add(nid)
 
     for edge in edges:
         srcs_e = list(edge.get("sources") or [])
@@ -602,6 +644,11 @@ def _smart_layout_engine(graph: Dict[str, Any]) -> Dict[str, Any]:
                         satellite_edge_ports[t_nid_e] = (str(t_pid_e), str(s_pid_e))
 
     topo_node_ids = [n for n in node_ids if n not in satellite_nodes]
+    if not topo_node_ids and node_ids:
+        satellite_nodes.clear()
+        satellite_connected_to.clear()
+        satellite_edge_ports.clear()
+        topo_node_ids = list(node_ids)
 
     # ── 4. Build directed graph for topological sort ──────────────────────────
     adj_fwd: Dict[str, List[str]] = {n: [] for n in topo_node_ids}
@@ -699,6 +746,23 @@ def _smart_layout_engine(graph: Dict[str, Any]) -> Dict[str, Any]:
         preds = adj_bwd.get(n, [])
         layers[n] = (max(layers.get(p, 0) for p in preds) + 1) if preds else 0
 
+    satellite_stack_height: Dict[str, float] = {}
+    satellites_by_target: Dict[str, List[str]] = defaultdict(list)
+    for sat_nid, target_nid in satellite_connected_to.items():
+        if target_nid:
+            satellites_by_target[target_nid].append(sat_nid)
+    for target_nid, sat_ids in satellites_by_target.items():
+        sat_total_h = 0.0
+        max_sat_h = 0.0
+        for sat_nid in sat_ids:
+            sat_h = float(node_by_id.get(sat_nid, {}).get("height", _SL_DEFAULT_HH * 2))
+            sat_total_h += sat_h
+            max_sat_h = max(max_sat_h, sat_h)
+        if len(sat_ids) > 1:
+            sat_total_h += _SL_MIN_GAP * (len(sat_ids) - 1)
+        base_h = float(node_by_id.get(target_nid, {}).get("height", _SL_DEFAULT_HH * 2))
+        satellite_stack_height[target_nid] = max(base_h, sat_total_h, base_h + _SL_MIN_GAP + max_sat_h)
+
     # ── 6. Grid positions: column = layer, row order = crossing minimization ──
     layer_groups: Dict[int, List[str]] = defaultdict(list)
     for nid in topo_node_ids:
@@ -715,7 +779,7 @@ def _smart_layout_engine(graph: Dict[str, Any]) -> Dict[str, Any]:
     for nid in topo_node_ids:
         lyr = layers.get(nid, 0)
         nw = float(node_by_id[nid].get("width", _SL_DEFAULT_HW * 2))
-        nh = float(node_by_id[nid].get("height", _SL_DEFAULT_HH * 2))
+        nh = satellite_stack_height.get(nid, float(node_by_id[nid].get("height", _SL_DEFAULT_HH * 2)))
         max_hw_per_layer[lyr] = max(max_hw_per_layer.get(lyr, 0.0), nw / 2)
         max_hh_per_layer[lyr] = max(max_hh_per_layer.get(lyr, 0.0), nh / 2)
 
@@ -738,8 +802,14 @@ def _smart_layout_engine(graph: Dict[str, Any]) -> Dict[str, Any]:
         cx_col = layer_cx_map[lyr]
         y_offsets: List[float] = [0.0]
         for row_i in range(1, len(col_nodes)):
-            prev_hh = float(node_by_id[col_nodes[row_i - 1]].get("height", _SL_DEFAULT_HH * 2)) / 2
-            curr_hh = float(node_by_id[col_nodes[row_i]].get("height", _SL_DEFAULT_HH * 2)) / 2
+            prev_id = col_nodes[row_i - 1]
+            curr_id = col_nodes[row_i]
+            prev_hh = satellite_stack_height.get(
+                prev_id, float(node_by_id[prev_id].get("height", _SL_DEFAULT_HH * 2))
+            ) / 2
+            curr_hh = satellite_stack_height.get(
+                curr_id, float(node_by_id[curr_id].get("height", _SL_DEFAULT_HH * 2))
+            ) / 2
             v_step = max(prev_hh + curr_hh + _SL_MIN_GAP, _SL_V_SPACING)
             y_offsets.append(y_offsets[-1] + v_step)
         max_offset = y_offsets[-1]
@@ -749,8 +819,7 @@ def _smart_layout_engine(graph: Dict[str, Any]) -> Dict[str, Any]:
 
     all_cx = [cx for cx, _ in node_center.values()]
     all_cy = [cy for _, cy in node_center.values()]
-    origin_cx = (min(all_cx) + max(all_cx)) / 2.0
-    origin_cy = (min(all_cy) + max(all_cy)) / 2.0
+    origin_cx, origin_cy = _bbox_center(all_cx, all_cy)
     node_center = {
         nid: (cx - origin_cx, cy - origin_cy)
         for nid, (cx, cy) in node_center.items()
@@ -770,22 +839,69 @@ def _smart_layout_engine(graph: Dict[str, Any]) -> Dict[str, Any]:
         node["width"] = nw
         node["height"] = nh
 
-    # ── 6.5. Place satellite nodes below their connected main node ────────────
+    # ── 6.5. Place satellite nodes around their connected main node ───────────
     satellite_port_side_override: Dict[str, str] = {}
+    satellites_by_slot: Dict[Tuple[str, str], List[str]] = defaultdict(list)
+    satellite_slot: Dict[str, str] = {}
+    for sat_nid in satellite_nodes:
+        target_nid = satellite_connected_to.get(sat_nid)
+        sat_pid, target_pid = satellite_edge_ports.get(sat_nid, ("", ""))
+        sat_side = _get_port_side(sat_pid, sat_nid) or _SL_PORT_SIDE_MAP.get(
+            _sl_port_short_name(sat_pid, sat_nid), ""
+        )
+        target_side = _get_port_side(target_pid, target_nid or "") or _SL_PORT_SIDE_MAP.get(
+            _sl_port_short_name(target_pid, target_nid or ""), ""
+        )
+        sat_pname = _sl_port_short_name(sat_pid, sat_nid)
+        target_pname = _sl_port_short_name(target_pid, target_nid or "")
+        is_signal_satellite = (
+            _SL_PORT_DOMAIN.get(sat_pname) == "signal"
+            or _SL_PORT_DOMAIN.get(target_pname) == "signal"
+        )
+        if is_signal_satellite and sat_side == "EAST" and target_side in ("", "WEST"):
+            slot = "WEST"
+        elif is_signal_satellite and sat_side == "WEST" and target_side == "EAST":
+            slot = "EAST"
+        else:
+            slot = "SOUTH"
+        satellite_slot[sat_nid] = slot
+        satellites_by_slot[(target_nid or "", slot)].append(sat_nid)
+
+    satellite_slot_index: Dict[str, Tuple[int, int]] = {}
+    for sats in satellites_by_slot.values():
+        sats.sort()
+        for idx, sat_nid in enumerate(sats):
+            satellite_slot_index[sat_nid] = (idx, len(sats))
+
     for sat_nid in satellite_nodes:
         sat_node = node_by_id[sat_nid]
+        sat_hw = float(sat_node.get("width", _SL_DEFAULT_HW * 2)) / 2
         sat_hh = float(sat_node.get("height", _SL_DEFAULT_HH * 2)) / 2
         target_nid = satellite_connected_to.get(sat_nid)
+        slot = satellite_slot.get(sat_nid, "SOUTH")
+        idx, count = satellite_slot_index.get(sat_nid, (0, 1))
         if target_nid and target_nid in node_center:
             tx, ty = node_center[target_nid]
             t_node = node_by_id[target_nid]
+            t_hw = float(t_node.get("width", _SL_DEFAULT_HW * 2)) / 2
             t_hh = float(t_node.get("height", _SL_DEFAULT_HH * 2)) / 2
-            sat_y = ty - t_hh - _SL_MIN_GAP - sat_hh
-            node_center[sat_nid] = (tx, sat_y)
+            spread = max(float(sat_node.get("height", _SL_DEFAULT_HH * 2)) + _SL_MIN_GAP, _SL_V_SPACING)
+            offset = (idx - (count - 1) / 2.0) * spread
+            if slot == "WEST":
+                node_center[sat_nid] = (tx - t_hw - _SL_MIN_GAP - sat_hw, ty - offset)
+                satellite_port_side_override[sat_nid] = "EAST"
+            elif slot == "EAST":
+                node_center[sat_nid] = (tx + t_hw + _SL_MIN_GAP + sat_hw, ty - offset)
+                satellite_port_side_override[sat_nid] = "WEST"
+            else:
+                h_spread = max(float(sat_node.get("width", _SL_DEFAULT_HW * 2)) + _SL_MIN_GAP, _SL_H_SPACING)
+                x_offset = (idx - (count - 1) / 2.0) * h_spread
+                sat_y = ty - t_hh - _SL_MIN_GAP - sat_hh
+                node_center[sat_nid] = (tx + x_offset, sat_y)
+                satellite_port_side_override[sat_nid] = "NORTH"
         else:
             node_center[sat_nid] = (0.0, -_SL_MIN_GAP - sat_hh)
-        satellite_port_side_override[sat_nid] = "NORTH"
-        sat_hw = float(sat_node.get("width", _SL_DEFAULT_HW * 2)) / 2
+            satellite_port_side_override[sat_nid] = "NORTH"
         scx, scy = node_center[sat_nid]
         sat_node["x"] = scx - sat_hw
         sat_node["y"] = scy - sat_hh
@@ -1047,136 +1163,15 @@ def _sl_resolve_sections_for_connect(
 
 def _apply_layout_graph_to_modelica_code(
     modelica_code: str, layout_graph: Dict[str, Any]
-) -> Tuple[str, Dict[str, int]]:
-    if not modelica_code or not isinstance(layout_graph, dict):
-        return modelica_code, {"components_updated": 0, "connects_updated": 0}
+) -> Tuple[str, Dict[str, Any]]:
+    from core.modelica_layout_writer import apply_layout_graph_to_modelica_code
 
-    children = layout_graph.get("children", []) if isinstance(layout_graph.get("children"), list) else []
-    centers: Dict[str, Tuple[float, float]] = {}
-    extents: Dict[str, str] = {}
-    rotations: Dict[str, int] = {}
-    for child in children:
-        if not isinstance(child, dict):
-            continue
-        cid = str(child.get("id", "")).strip()
-        if not cid:
-            continue
-        try:
-            x = float(child.get("x", 0.0))
-            y = float(child.get("y", 0.0))
-            w = float(child.get("width", 120.0))
-            h = float(child.get("height", 60.0))
-        except Exception:
-            continue
-        extents[cid] = f"{{{{{_fmt_layout_num(x)},{_fmt_layout_num(y)}}},{{{_fmt_layout_num(x + w)},{_fmt_layout_num(y + h)}}}}}"
-        centers[cid] = (x + w / 2.0, y + h / 2.0)
-        rot = child.get("rotation")
-        if rot is not None:
-            try:
-                rotations[cid] = int(rot)
-            except (TypeError, ValueError):
-                pass
-
-    if not extents:
-        return modelica_code, {"components_updated": 0, "connects_updated": 0}
-
-    layout_edges = layout_graph.get("edges", []) if isinstance(layout_graph.get("edges"), list) else []
-    child_ids = set(centers.keys())
-    edge_route_map, edge_color_map, inst_pair_routes = _sl_build_edge_route_lookups(
-        layout_edges, child_ids
-    )
-
-    import re as _re
-    eq_marker = _re.search(r"(?m)^\s*equation\s*$", modelica_code)
-    decl_part = modelica_code[:eq_marker.start()] if eq_marker else modelica_code
-    tail_part = modelica_code[eq_marker.start():] if eq_marker else ""
-    updated_components = 0
-    updated_connects = 0
-
-    for comp_id, extent in extents.items():
-        rot_val = rotations.get(comp_id, 0)
-        if rot_val:
-            new_placement = f"Placement(transformation(extent={extent}, rotation={rot_val}))"
-        else:
-            new_placement = f"Placement(transformation(extent={extent}))"
-        # Support `inner TYMultibody.World world(...)` — optional `inner` before qualified type.
-        pattern = _re.compile(
-            rf"(?ms)(^\s*(?:inner\s+)?[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*\s+{_re.escape(comp_id)}\b.*?);"
-        )
-
-        def _decl_repl(match: _re.Match, _placement: str = new_placement) -> str:
-            nonlocal updated_components
-            block = match.group(1)
-            full = match.group(0)
-            if "annotation(" in block:
-                if _PLACEMENT_RE.search(block):
-                    stripped = _PLACEMENT_RE.sub("", full)
-                    stripped = _re.sub(r"annotation\s*\(\s*,\s*", "annotation(", stripped)
-                    stripped = _re.sub(r",\s*\)", ")", stripped)
-                    stripped = _re.sub(r"annotation\s*\(\s*\)", "", stripped)
-                    new_full = _re.sub(r"annotation\s*\(", f"annotation({_placement}, ", stripped, count=1)
-                    if not _re.search(r"annotation\s*\(", new_full):
-                        new_full = stripped.rstrip(";") + f" annotation({_placement});"
-                    if new_full != full:
-                        updated_components += 1
-                        return new_full
-                    return full
-                else:
-                    new_full = _re.sub(r"annotation\s*\(", f"annotation({_placement}, ", full, count=1)
-                    if new_full != full:
-                        updated_components += 1
-                        return new_full
-                    return full
-            updated_components += 1
-            return f"{block} annotation({_placement});"
-
-        decl_part, _ = pattern.subn(_decl_repl, decl_part, count=1)
-
-    new_tail_lines: List[str] = []
-    for line in tail_part.splitlines(keepends=False):
-        m = _CONNECT_CORE_RE.match(line)
-        if not m:
-            new_tail_lines.append(line)
-            continue
-        a_port = m.group(1)
-        b_port = m.group(2)
-        a_inst = _sl_resolve_instance_for_port(a_port, child_ids)
-        b_inst = _sl_resolve_instance_for_port(b_port, child_ids)
-        connect_stmt = f"  connect({a_port}, {b_port})"
-
-        sections, color_rgb = _sl_resolve_sections_for_connect(
-            a_port,
-            b_port,
-            edge_route_map,
-            edge_color_map,
-            inst_pair_routes,
-            child_ids,
-        )
-        if sections:
-            pts_str = _sections_to_points_str(sections)
-            if pts_str:
-                color_str = (
-                    f", color={{{color_rgb[0]},{color_rgb[1]},{color_rgb[2]}}}"
-                    if color_rgb and len(color_rgb) >= 3
-                    else ""
-                )
-                new_tail_lines.append(
-                    f"{connect_stmt} annotation(Line(points={pts_str}{color_str}));"
-                )
-                updated_connects += 1
-                continue
-
-        if a_inst in centers and b_inst in centers:
-            ax, ay = centers[a_inst]
-            bx, by = centers[b_inst]
-            points = f"{{{{{_fmt_layout_num(ax)},{_fmt_layout_num(ay)}}},{{{_fmt_layout_num(bx)},{_fmt_layout_num(by)}}}}}"
-            new_tail_lines.append(f"{connect_stmt} annotation(Line(points={points}));")
-            updated_connects += 1
-        else:
-            new_tail_lines.append(line)
-
-    merged = decl_part + ("\n".join(new_tail_lines) + ("\n" if tail_part.endswith("\n") else ""))
-    return merged, {"components_updated": updated_components, "connects_updated": updated_connects}
+    patched, stats = apply_layout_graph_to_modelica_code(modelica_code, layout_graph)
+    return patched, {
+        "components_updated": int(stats.get("components_updated", 0)),
+        "connects_updated": int(stats.get("connects_updated", 0)),
+        "diagnostics": stats.get("diagnostics", []),
+    }
 
 
 def _normalize_graph_format(graph: Dict[str, Any]) -> Dict[str, Any]:

@@ -1,11 +1,11 @@
-"""Workflow: MCP 仅注册 ``call_code``；其余为 Python 内部/测试辅助。"""
+"""Workflow: MCP 仅注册 ``call_code``（``run_sysplorer_api``）；其余为 Python 内部/测试辅助。"""
 from __future__ import annotations
 
 import json
 import time
 from typing import Any, Dict, List, Optional
 
-from mcp_instance import mcp
+from mcp_instance import mcp, writable_annotations
 from path_config import TEMP_CODE_FOLDER
 from core.utils import _json, _disk_free_mb, _sync_load_caches
 from core.job_manager import job_manager
@@ -46,18 +46,18 @@ def _get_job_result_core(job_id: str) -> str:
 
 
 def mworks_submit_job(action: str, payload: Dict[str, Any]) -> str:
-    """Python 辅助：等价于 ``call_code(mode=\"submit_job\", ...)``；**非 MCP 工具**。"""
+    """Python 辅助 / 单测。Agent 请用 ``check_model`` / ``translate_model`` / ``simulate_model``。"""
     return _submit_job_core(action, payload)
 
 
 def mworks_get_job_result(job_id: str) -> str:
-    """Python 辅助：等价于 ``call_code(mode=\"get_job_result\", ...)``；**非 MCP 工具**。"""
+    """Python 辅助 / 单测。Agent 请用专用检查、翻译、仿真工具的同步返回。"""
     return _get_job_result_core(job_id)
 
 
 def _run_with_ready_impl(action: str, payload: Dict[str, Any]) -> str:
     """
-    先确保 Sysplorer 就绪，再按 ``action`` 分派。**仅供** ``call_code(mode=\"run_with_ready\")`` 与单元测试调用。
+    先确保 Sysplorer 就绪，再按 ``action`` 分派。**仅供单元测试**；MCP 不再暴露此入口。
     """
     try:
         _get_driver()  # triggers StackHealthManager recovery if needed
@@ -78,9 +78,12 @@ def _run_with_ready_impl(action: str, payload: Dict[str, Any]) -> str:
         from tools.model_ops import (
             mworks_load_file,
             load_library,
+            library_prepare,
             mworks_open_model,
             mworks_unload_file,
-            model_manager,
+            model_inspect,
+            compare_model,
+            mworks_export_model_diagram,
             mworks_save_model,
             mworks_set_model_param,
             check_model,
@@ -96,54 +99,93 @@ def _run_with_ready_impl(action: str, payload: Dict[str, Any]) -> str:
         from tools.layout import smart_layout
 
         if action_norm == "load_file":
-            raw = mworks_load_file(req.get("file_path", ""))
+            raw = mworks_load_file(
+                req.get("file_path", ""),
+                model_name=str(req.get("model_name", "") or ""),
+                auto_load_deps=bool(req.get("auto_load_deps", True)),
+                skip_if_unchanged=bool(req.get("skip_if_unchanged", True)),
+                force_reload=bool(req.get("force_reload", False)),
+                prepare_dependencies=bool(req.get("prepare_dependencies", True)),
+                dependency_toml_path=str(req.get("dependency_toml_path", "") or ""),
+                dependency_dry_run=bool(req.get("dependency_dry_run", False)),
+                download_missing_deps=bool(req.get("download_missing_deps", True)),
+                refresh_libraries_after_download=bool(req.get("refresh_libraries_after_download", True)),
+                load_dependencies_after_download=bool(req.get("load_dependencies_after_download", True)),
+                respect_toml_install_flags=bool(req.get("respect_toml_install_flags", True)),
+                stop_on_dep_error=bool(req.get("stop_on_dep_error", False)),
+                dependency_download_dir=str(req.get("dependency_download_dir", "") or ""),
+                dependency_staging_root=str(req.get("dependency_staging_root", "") or ""),
+                allow_dependency_elevation=bool(req.get("allow_dependency_elevation", True)),
+                dependency_elevation_mode=str(req.get("dependency_elevation_mode", "auto") or "auto"),
+                dependency_install_helper_path=str(req.get("dependency_install_helper_path", "") or ""),
+            )
         elif action_norm == "load_library":
             raw = load_library(
                 req.get("library_name", ""),
                 library_version=req.get("library_version", ""),
+                use_cache=bool(req.get("use_cache", True)),
+                action=str(req.get("library_action") or req.get("manager_action") or "load"),
+            )
+        elif action_norm in ("library_prepare", "prepare_dependencies"):
+            raw = library_prepare(
+                action=str(req.get("library_action") or req.get("manager_action") or "plan"),
+                library_name=str(req.get("library_name", "") or ""),
+                library_version=str(req.get("library_version", "") or ""),
+                model_name=str(req.get("model_name", "") or ""),
+                dry_run=bool(req.get("dry_run", True)),
+                download_missing=bool(req.get("download_missing", False)),
             )
         elif action_norm == "open_model":
             raw = mworks_open_model(req.get("model_name", ""))
         elif action_norm == "unload_file":
             raw = mworks_unload_file(req.get("model_name", ""))
         elif action_norm == "lookup_component":
-            raw = model_manager(
+            raw = model_inspect(
                 action="lookup_component",
                 model_name=str(req.get("model_name", "") or ""),
                 comp_name=str(req.get("comp_name", "") or ""),
                 info_type=str(req.get("info_type", "") or ""),
             )
         elif action_norm == "get_components":
-            raw = model_manager(
+            raw = model_inspect(
                 action="get_components",
                 model_name=str(req.get("model_name", "") or ""),
                 component=str(req.get("component", "") or ""),
             )
         elif action_norm == "get_component_ports":
-            raw = model_manager(
+            raw = model_inspect(
                 action="get_component_ports",
                 model_name=str(req.get("model_name", "") or ""),
                 component_name=str(req.get("component_name", "") or ""),
                 port_direction=int(req.get("port_direction", 0)),
             )
+        elif action_norm == "get_component_type_name":
+            raw = model_inspect(
+                action="get_component_type_name",
+                model_name=str(req.get("model_name", "") or ""),
+                component_name=str(
+                    req.get("component_name", "") or req.get("comp_name", "") or ""
+                ),
+                full_name=bool(req.get("full_name", False)),
+            )
         elif action_norm == "get_model_text":
-            raw = model_manager(
+            raw = model_inspect(
                 action="get_model_text",
                 model_name=str(req.get("model_name", "") or ""),
             )
         elif action_norm == "get_model_description":
-            raw = model_manager(
+            raw = model_inspect(
                 action="get_model_description",
                 model_name=str(req.get("model_name", "") or ""),
             )
         elif action_norm == "get_component_description":
-            raw = model_manager(
+            raw = model_inspect(
                 action="get_component_description",
                 model_name=str(req.get("model_name", "") or ""),
                 comp_name=str(req.get("comp_name", "") or ""),
             )
         elif action_norm == "get_classes":
-            raw = model_manager(
+            raw = model_inspect(
                 action="get_classes",
                 model_name=str(req.get("model_name", "") or ""),
             )
@@ -163,13 +205,19 @@ def _run_with_ready_impl(action: str, payload: Dict[str, Any]) -> str:
                 component=str(req.get("component", "") or ""),
             )
         elif action_norm in ("export_model_diagram", "export_diagram"):
-            raw = model_manager(
-                action="export_model_diagram",
+            raw = mworks_export_model_diagram(
                 model_name=str(req.get("model_name", "") or ""),
                 output_path=str(req.get("output_path", "") or ""),
                 width=int(req.get("width", 800)),
                 height=int(req.get("height", 600)),
                 open_model_first=bool(req.get("open_model_first", True)),
+            )
+        elif action_norm in ("compare_model", "compare", "compare_models"):
+            raw = compare_model(
+                model_name=str(req.get("model_name", "") or ""),
+                model_name_b=str(req.get("model_name_b", "") or req.get("compare_with", "") or ""),
+                is_file=bool(req.get("is_file", False)),
+                open_model_first=bool(req.get("open_models_first", req.get("open_model_first", True))),
             )
         elif action_norm in (
             "check_model",
@@ -183,11 +231,6 @@ def _run_with_ready_impl(action: str, payload: Dict[str, Any]) -> str:
                 model_type=req.get("model_type", "MODELICA"),
                 stop_on_error=bool(req.get("stop_on_error", False)),
                 reload_mo_path=str(req.get("reload_mo_path", "") or ""),
-                smart_layout_graph_json=str(req.get("smart_layout_graph_json", "") or ""),
-                smart_layout_graph_json_path=str(req.get("smart_layout_graph_json_path", "") or ""),
-                smart_layout_model_path=str(req.get("smart_layout_model_path", "") or ""),
-                smart_layout_output_json_path=str(req.get("smart_layout_output_json_path", "") or ""),
-                smart_layout_timeout_seconds=int(req.get("smart_layout_timeout_seconds", 120)),
             )
         elif action_norm in (
             "translate_model",
@@ -203,11 +246,6 @@ def _run_with_ready_impl(action: str, payload: Dict[str, Any]) -> str:
                 run_to=req.get("run_to", "MAKING"),
                 config_json=req.get("config_json", ""),
                 reload_mo_path=str(req.get("reload_mo_path", "") or ""),
-                smart_layout_graph_json=str(req.get("smart_layout_graph_json", "") or ""),
-                smart_layout_graph_json_path=str(req.get("smart_layout_graph_json_path", "") or ""),
-                smart_layout_model_path=str(req.get("smart_layout_model_path", "") or ""),
-                smart_layout_output_json_path=str(req.get("smart_layout_output_json_path", "") or ""),
-                smart_layout_timeout_seconds=int(req.get("smart_layout_timeout_seconds", 120)),
             )
         elif action_norm in (
             "simulate_model",
@@ -223,11 +261,6 @@ def _run_with_ready_impl(action: str, payload: Dict[str, Any]) -> str:
                 verify_time_point=req.get("verify_time_point", "end"),
                 result_var_type=int(req.get("result_var_type", 0)),
                 reload_mo_path=str(req.get("reload_mo_path", "") or ""),
-                smart_layout_graph_json=str(req.get("smart_layout_graph_json", "") or ""),
-                smart_layout_graph_json_path=str(req.get("smart_layout_graph_json_path", "") or ""),
-                smart_layout_model_path=str(req.get("smart_layout_model_path", "") or ""),
-                smart_layout_output_json_path=str(req.get("smart_layout_output_json_path", "") or ""),
-                smart_layout_timeout_seconds=int(req.get("smart_layout_timeout_seconds", 120)),
             )
         elif action_norm in MWORKS_RESULT_MANAGER_ACTIONS:
             vraw = req.get("var_names") or []
@@ -354,7 +387,7 @@ def _run_with_ready_impl(action: str, payload: Dict[str, Any]) -> str:
 
 
 def mworks_run_with_ready(action: str, payload: Dict[str, Any]) -> str:
-    """Python 辅助；Agent 请用 ``call_code(mode=\"run_with_ready\", ...)``。"""
+    """Python 辅助 / 单测。Agent 请用对应专用 MCP 工具。"""
     return _run_with_ready_impl(action, payload)
 
 
@@ -511,6 +544,7 @@ def _fast_workflow_impl(
                 layout_output_json_path=smart_layout_output_json_path,
                 timeout_seconds=int(smart_layout_timeout_seconds),
                 model_name_hint=hint,
+                auto_generate_graph=True,
             )
             elapsed_pf = round(time.perf_counter() - t0, 3)
             row_pf = {
@@ -545,7 +579,7 @@ def _fast_workflow_impl(
             if not disk_ok and stop_on_error:
                 return _json({"ok": False, "tool": "mworks_fast_workflow",
                               "error": f"insufficient disk space ({disk.get('free_mb',0):.0f} MB < {min_free_mb_for_sim} MB)"})
-        # 部分 Sysplorer 版本对默认探测变量 ``time`` 的 GetResultVariableInfo 不可靠；若已指定 KPI，用首个变量做结果存在性探测。
+        # simulate_model 仅在传入 verify_result_var 时做结果探测；若已指定 KPI，用首个变量做探测以交叉确认。
         verify_v = (kpis[0] if kpis else "").strip()
         for m in sims:
             row = _run_step(
@@ -649,6 +683,10 @@ def _fast_workflow_impl(
             else:
                 row_sl["components_updated"] = sdata.get("components_updated", 0)
                 row_sl["connects_updated"] = sdata.get("connects_updated", 0)
+                if sdata.get("graph_source"):
+                    row_sl["graph_source"] = sdata.get("graph_source")
+                if sdata.get("diagnostics"):
+                    row_sl["diagnostics"] = sdata.get("diagnostics")
             steps.append(row_sl)
             if reload_after_smart_layout and sok:
                 _run_step(
@@ -726,8 +764,8 @@ def mworks_fast_workflow(
     reload_after_smart_layout: bool = True,
 ) -> str:
     """
-    Python 辅助：一键 load → check → simulate → KPI（及 Smart Layout）。**非 MCP 工具**；Agent 请用
-    ``call_code(mode=\"fast_workflow\", payload={...})``。
+    Python 辅助 / 单测：一键 load → check → simulate → KPI。Agent 请拆开调用
+    ``smart_layout``、``check_model``、``simulate_model``、``result_manager``。
 
     sim_mode: 0=current mode (auto translate if needed), 1=standalone, 2=real-time.
     """
@@ -756,74 +794,88 @@ def mworks_fast_workflow(
     )
 
 
-@mcp.tool()
-def call_code(mode: str, payload: Optional[Dict[str, Any]] = None) -> str:
-    """
-    **唯一 MCP 入口**（替代已移除的 ``mworks_run_script`` / ``mworks_submit_job`` / ``mworks_get_job_result`` /
-    ``mworks_run_with_ready`` / ``mworks_fast_workflow``）：按 ``mode`` 分流，返回 JSON 与原先各工具一致。
+_CALL_CODE_MOVED = {
+    "submit_job": "check_model / translate_model / simulate_model",
+    "get_job_result": "check_model / translate_model / simulate_model",
+    "run_with_ready": (
+        "the matching dedicated tool; set_model_param: "
+        'get_api_document("SetModelParamValue") then '
+        'call_code(mode="run_sysplorer_api")'
+    ),
+    "dispatch": (
+        "the matching dedicated tool; set_model_param: "
+        'get_api_document("SetModelParamValue") then '
+        'call_code(mode="run_sysplorer_api")'
+    ),
+    "ready": (
+        "the matching dedicated tool; set_model_param: "
+        'get_api_document("SetModelParamValue") then '
+        'call_code(mode="run_sysplorer_api")'
+    ),
+    "fast_workflow": "smart_layout, then check_model / simulate_model / result_manager",
+}
 
-    ## 分流表（必填 ``mode``，大小写不敏感）
 
-    | mode | 能力 | ``payload`` 约定 |
-    |------|------|-------------------|
-    | ``run_script`` | 进程内 ModelingPy / Sysblock | ``python_source``, ``script_path``, ``capture_stdout`` (默认 true), ``capture_stderr`` (默认 true) |
-    | ``submit_job`` | 异步任务 | ``action`` 为 check / translate / simulate；嵌套 ``payload`` 为任务参数字典 |
-    | ``get_job_result`` | 取异步结果 | ``job_id`` |
-    | ``run_with_ready`` | 就绪后分派 | 顶层 ``action`` + 子参数字典 ``payload``（或别名 ``request``）。别名 mode：``dispatch``、``ready`` |
-    | ``fast_workflow`` | 一键工作流 | 与原 ``fast_workflow`` 工具同名的可选字段扁平放入 ``payload`` |
+@mcp.tool(annotations=writable_annotations(destructive=True))
+def call_code(mode: str, payload: Dict[str, Any]) -> str:
+    """Last-resort Sysplorer API script. Prefer dedicated MCP tools.
 
-    **run_with_ready** 支持的 ``action`` 列表见 ``MCP_TOOLS.md``（含 ``set_model_param`` 改参，原独立工具已并入）。
+    Only ``mode="run_sysplorer_api"`` (old name ``run_script`` still works).
+    ``python_source`` / ``script_path`` must be inside ``payload``.
+    Import explicitly: ``import mworks.sysplorer as ModelingPy``.
+    Not a general Python runner. Do not call ClearAll / ChangeDirectory /
+    ChangeSimResultDirectory; attach mode also rejects Exit.
 
-    ## 工具箱 API 文档（``run_script`` + ``help``；勿先用 ``get_api_document``）
-
-    针对 **DesignOptMpe**（参数设计 / 优化 / MPE）、**CADToolbox**（CAD 工具箱）、**SimulinkImporter**（Simulink 导入）等 **Sysplorer 独立工具箱**：帮助文本通常不由主编程会话的 ``Help(cmd)`` 提供，**请勿**先调用 ``get_api_document`` 查询这些函数（常见返回空串或无有效文档）。
-
-    应使用 ``mode="run_script"``：例如 ``import mworks.sysplorer.DesignOptMpe as mpe``、``import mworks.sysplorer.CADToolbox as cadtool`` 或 ``import mworks.sysplorer.SimulinkImporter as slximport``（按实际工具箱包名替换），用对应模块的 ``ListFunctions()`` 列举命令，用 ``help(模块.函数名)`` 查看帮助；若需随 JSON 返回，将 ``help`` 输出写入 ``RUN_SCRIPT_RESULT``（例如 ``io.StringIO`` 重定向 ``sys.stdout``）。
-    **DesignOptMpe（参数估计 / 优化 / MPE）** 的补充说明：实操与排错见 ``resources/design_opt_mpe_api/参数估计使用说明.md``，接口全文见同目录 ``DesignOptMpe.md``；也可用 ``resources_retrieval`` 检索语料 ``design_opt_mpe_api``。
-    **SimulinkImporter** 须先 ``OpenSimulinkImporter()`` 再 ``ImportSimulinkModel(.slx 绝对路径, ...)``（其余参数可选），见 ``resources/simulink_importer_api/SimulinkImporter.md``。
-
-    **主编模 ModelingPy 命令**（如 ``OpenModel``、``AddComponent``、``LoadLibrary``）仍推荐使用 ``get_api_document``。
-
-    **安全**：``run_script`` 为任意代码执行；``MWORKS_RUN_SCRIPT_DISABLED=1`` 时该 mode 拒绝执行。
+    Retired: ``submit_job`` / ``get_job_result`` → check / translate / simulate
+    tools. ``run_with_ready`` → the matching dedicated tool.
+    ``fast_workflow`` → ``smart_layout`` then check / simulate / result_manager.
     """
     from tools.run_script import _mworks_run_script_impl
 
     m = (mode or "").strip().lower()
-    p = payload or {}
+    if not isinstance(payload, dict):
+        return _json(
+            {
+                "ok": False,
+                "tool": "call_code",
+                "error": "payload is required and must be an object",
+            }
+        )
+    p = payload
 
-    if m == "run_script":
+    if m in ("run_sysplorer_api", "run_script"):
+        raw_timeout = p.get("timeout_sec", None)
+        timeout_sec = None
+        if raw_timeout is not None and str(raw_timeout).strip() != "":
+            try:
+                timeout_sec = float(raw_timeout)
+            except (TypeError, ValueError):
+                timeout_sec = None
         return _mworks_run_script_impl(
             python_source=str(p.get("python_source", "") or ""),
             script_path=str(p.get("script_path", "") or ""),
             capture_stdout=bool(p.get("capture_stdout", True)),
             capture_stderr=bool(p.get("capture_stderr", True)),
+            timeout_sec=timeout_sec,
         )
 
-    if m == "submit_job":
-        inner = p.get("payload")
-        if not isinstance(inner, dict):
-            inner = {}
-        return _submit_job_core(str(p.get("action", "") or ""), inner)
-
-    if m == "get_job_result":
-        return _get_job_result_core(str(p.get("job_id", "") or ""))
-
-    if m in ("run_with_ready", "dispatch", "ready"):
-        sub = p.get("payload")
-        if not isinstance(sub, dict):
-            sub = p.get("request")
-        if not isinstance(sub, dict):
-            sub = {}
-        return _run_with_ready_impl(action=str(p.get("action", "") or ""), payload=sub)
-
-    if m == "fast_workflow":
-        return _fast_workflow_impl(**_fast_workflow_kwargs_from_payload(p))
+    moved = _CALL_CODE_MOVED.get(m)
+    if moved:
+        return _json(
+            {
+                "ok": False,
+                "tool": "call_code",
+                "action": m,
+                "error": f"call_code no longer handles {m!r}. Use {moved}.",
+                "hint": moved,
+                "moved_to": moved,
+            }
+        )
 
     return _json(
         {
             "ok": False,
             "tool": "call_code",
-            "error": f"Unsupported mode: {mode!r}. "
-            "Use run_script | submit_job | get_job_result | run_with_ready | fast_workflow.",
+            "error": f"Unsupported mode: {mode!r}. Use run_sysplorer_api.",
         }
     )

@@ -187,16 +187,27 @@ class ProcessManager:
             )
             pids = [int(tok.strip()) for tok in r.stdout.split() if tok.strip().isdigit()]
         else:
-            # Linux/macOS 使用 pgrep 查询PID
-            try:
+            # Linux/macOS 使用 pgrep 查询PID，兼容不同发行版上的大小写/包装脚本名
+            names = [proc_name]
+            if proc_name == "mwsolver":
+                names.append("MWSolver")
+            elif proc_name == "mworks":
+                names.append("mworks.sh")
+
+            seen: set[int] = set()
+            for name in names:
                 r = subprocess.run(
-                    ["pgrep", proc_name],
+                    ["pgrep", "-x", name],
                     capture_output=True, text=True, timeout=8,
                 )
-                pids = [int(line.strip()) for line in r.stdout.strip().split('\n') if line.strip()]
-            except subprocess.CalledProcessError:
-                # pgrep返回非零表示没有找到进程，返回空列表
-                pass
+                for line in r.stdout.strip().split('\n'):
+                    if not line.strip():
+                        continue
+                    try:
+                        seen.add(int(line.strip()))
+                    except ValueError:
+                        continue
+            pids = sorted(seen)
         return pids
 
     @staticmethod

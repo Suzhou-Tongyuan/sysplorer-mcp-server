@@ -1,0 +1,7 @@
+policy:
+  allow_implicit_invocation: true
+
+interface:
+  display_name: "TY Electrical Machine & Power Modeling"
+  short_description: "Use after ty-sysplorer-modeling-rules to build and verify TYMotor, TYElectricPower, and TYElectrical models."
+  default_prompt: "Use $ty-electrical-machine-power-modeling after $ty-sysplorer-modeling-rules to recreate a Simulink electrical, motor, or power-system block in Sysplorer, prioritize TYMotor, TYElectricPower, and TYElectrical, use only minimal Modelica 4.0.0.TY.1 glue, and do not deliver until reload, check, translate, simulate, and result inspection all pass."

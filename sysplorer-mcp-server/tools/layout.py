@@ -3,18 +3,19 @@ from __future__ import annotations
 
 import json
 import re
-import time
 from pathlib import Path
 from typing import Any, Dict, Tuple, List
 
-from mcp_instance import mcp
-from constants import _PROJECT_ROOT, _SMART_LAYOUT_TEMP_DIR
+from mcp_instance import mcp, writable_annotations
+from constants import _CLASS_RE, _PROJECT_ROOT, _WITHIN_RE
 from core.smart_layout import (
     _normalize_graph_format,
     _smart_layout_engine,
     _apply_layout_graph_to_modelica_code,
 )
-from core.utils import _json
+from core.layout_official import persist_official_routeline
+from core.modelica_graph_builder import build_graph_from_modelica_34_source
+from core.utils import _json, infer_modelica_top_class_fq_from_mo
 
 
 def _normalize_smart_layout_mode(mode: str) -> str:
@@ -35,13 +36,52 @@ def _normalize_smart_layout_mode(mode: str) -> str:
     return aliases.get(raw, raw)
 
 
+def _layout_only_missing_graph_error(
+    graph_json: str = "",
+    graph_json_path: str = "",
+    model_name: str = "",
+    modelica_code: str = "",
+    model_output_path: str = "",
+) -> str:
+    parts = [
+        "mode=layout_only requires input_graph_json or input_json_path (pre-built graph JSON). "
+        "It does not parse .mo files."
+    ]
+    if (graph_json or "").strip() or (graph_json_path or "").strip():
+        parts.append(
+            "graph_json/graph_json_path are writeback_mo fields; pass the same JSON as "
+            "input_graph_json/input_json_path."
+        )
+    if (model_name or "").strip() or (modelica_code or "").strip() or (model_output_path or "").strip():
+        parts.append(
+            "model_name, modelica_code, model_output_path and auto_generate_graph are ignored "
+            "in layout_only; use mode=writeback_mo to generate a graph from a .mo."
+        )
+    return " ".join(parts)
+
+
 def _layout_only_core(
     input_graph_json: str = "",
     input_json_path: str = "",
     output_json_path: str = "",
+    graph_json: str = "",
+    graph_json_path: str = "",
+    model_name: str = "",
+    modelica_code: str = "",
+    model_output_path: str = "",
 ) -> Dict[str, Any]:
     if not input_graph_json and not input_json_path:
-        return {"success": False, "error": "Provide input_graph_json or input_json_path."}
+        return {
+            "success": False,
+            "mode": "layout_only",
+            "error": _layout_only_missing_graph_error(
+                graph_json=graph_json,
+                graph_json_path=graph_json_path,
+                model_name=model_name,
+                modelica_code=modelica_code,
+                model_output_path=model_output_path,
+            ),
+        }
 
     if input_graph_json:
         graph = json.loads(input_graph_json)
@@ -56,15 +96,10 @@ def _layout_only_core(
 
     layout_data = _smart_layout_engine(graph)
 
+    out_str = ""
     if output_json_path:
         out_p = Path(output_json_path).resolve()
         out_p.parent.mkdir(parents=True, exist_ok=True)
-        out_p.write_text(json.dumps(layout_data, ensure_ascii=False, indent=2), encoding="utf-8")
-        out_str = str(out_p)
-    else:
-        _SMART_LAYOUT_TEMP_DIR.mkdir(parents=True, exist_ok=True)
-        stamp = time.strftime("%Y%m%d_%H%M%S")
-        out_p = _SMART_LAYOUT_TEMP_DIR / f"smart_layout_output_{stamp}.json"
         out_p.write_text(json.dumps(layout_data, ensure_ascii=False, indent=2), encoding="utf-8")
         out_str = str(out_p)
 
@@ -162,6 +197,44 @@ def _finalize_core(
     }
 
 
+def _infer_model_name_from_modelica_text(text: str) -> str:
+    raw = text or ""
+    wm = _WITHIN_RE.search(raw)
+    prefix = wm.group(1).strip() if wm else ""
+    m = _CLASS_RE.search(raw)
+    if not m:
+        return ""
+    name = m.group(2)
+    return f"{prefix}.{name}" if prefix else name
+
+
+def _resolve_writeback_model_name(
+    model_name: str = "",
+    modelica_code: str = "",
+    model_output_path: str = "",
+) -> Tuple[str, str]:
+    """Return (resolved_name, source). source is explicit|modelica_code|mo_file|path_stem|""."""
+    explicit = (model_name or "").strip()
+    if explicit:
+        return explicit, "explicit"
+    code = (modelica_code or "").strip()
+    if code:
+        inferred = _infer_model_name_from_modelica_text(code)
+        if inferred:
+            return inferred, "modelica_code"
+    path_text = (model_output_path or "").strip()
+    if path_text:
+        p = Path(path_text)
+        if p.is_file():
+            from_file = infer_modelica_top_class_fq_from_mo(p)
+            if from_file:
+                return from_file, "mo_file"
+        stem = p.stem.strip()
+        if stem and stem.lower() != "package":
+            return stem, "path_stem"
+    return "", ""
+
+
 def _writeback_mo_core(
     model_name: str,
     modelica_code: str = "",
@@ -169,12 +242,22 @@ def _writeback_mo_core(
     graph_json_path: str = "",
     graph_json: str = "",
     auto_layout: bool = True,
+    auto_generate_graph: bool = True,
+    graph_parser: str = "modelica_34_ast",
     layout_output_json_path: str = "",
     timeout_seconds: int = 120,
 ) -> Dict[str, Any]:
-    name = (model_name or "").strip()
+    name, name_source = _resolve_writeback_model_name(model_name, modelica_code, model_output_path)
     if not name:
-        return {"success": False, "error": "model_name is required."}
+        return {
+            "success": False,
+            "mode": "writeback_mo",
+            "error": (
+                "mode=writeback_mo requires model_name (fully-qualified class name, "
+                "e.g. MassSpringDamper.StepForceTest). Pass model_name explicitly, or "
+                "provide modelica_code / an existing model_output_path so it can be inferred."
+            ),
+        }
 
     output_path = (
         Path(model_output_path).resolve()
@@ -192,6 +275,7 @@ def _writeback_mo_core(
         "success": True,
         "mode": "writeback_mo",
         "model_name": name,
+        "model_name_source": name_source,
         "model_output_path": str(output_path),
         "model_written": wrote_model,
         "auto_layout_requested": bool(auto_layout),
@@ -213,16 +297,76 @@ def _writeback_mo_core(
                 result["reload_after_writeback"] = {"ok": False, "error": str(exc)}
         return result
 
+    graph_source = ""
+    graph_diagnostics: List[Dict[str, Any]] = []
     payload: Dict[str, object] = {"model_name": name}
     if graph_json.strip():
         payload["graph"] = json.loads(graph_json)
+        graph_source = "graph_json"
     elif graph_json_path.strip():
         payload["graph_json_path"] = graph_json_path.strip()
+        graph_source = "graph_json_path"
+    elif auto_generate_graph and graph_parser != "off":
+        if not output_path.exists():
+            return {
+                **result,
+                "success": False,
+                "error": f"auto_generate_graph=True requires an existing .mo file: {output_path}",
+            }
+        source_text = output_path.read_text(encoding="utf-8")
+        gb = build_graph_from_modelica_34_source(source_text, model_name=name)
+        graph_diagnostics = list(gb.diagnostics or [])
+        if gb.ok and gb.graph and not gb.error:
+            payload["graph"] = gb.graph
+            graph_source = gb.source or "modelica_34_ast"
+        elif gb.ok and gb.graph and gb.error and "无需布局" in gb.error:
+            return {
+                **result,
+                "success": True,
+                "skipped": True,
+                "reason": gb.error,
+                "graph_source": gb.source or "modelica_34_ast",
+                "diagnostics": graph_diagnostics,
+                "components_updated": 0,
+                "connects_updated": 0,
+            }
+        else:
+            # Fall back to the legacy regex extractor while the AST parser is maturing.
+            legacy_ok, legacy_graph, legacy_err = _parse_modelica_to_graph_legacy(source_text, model_name=name)
+            if legacy_ok:
+                payload["graph"] = legacy_graph
+                graph_source = "legacy_regex"
+                graph_diagnostics.append(
+                    {
+                        "severity": "warning",
+                        "code": "modelica_34_ast_fallback",
+                        "message": gb.error or "Modelica 3.4 parser failed; used legacy regex graph extractor",
+                    }
+                )
+            elif "无需布局" in (legacy_err or ""):
+                return {
+                    **result,
+                    "success": True,
+                    "skipped": True,
+                    "reason": legacy_err,
+                    "graph_source": "legacy_regex",
+                    "diagnostics": graph_diagnostics,
+                    "components_updated": 0,
+                    "connects_updated": 0,
+                }
+            else:
+                return {
+                    **result,
+                    "success": False,
+                    "error": f"自动生成graph失败: {gb.error or legacy_err}",
+                    "graph_source": gb.source or "modelica_34_ast",
+                    "diagnostics": graph_diagnostics,
+                }
     else:
         return {
             **result,
             "success": False,
-            "error": "auto_layout=True requires graph_json or graph_json_path.",
+            "error": "auto_layout=True requires graph_json/graph_json_path, or auto_generate_graph=True with model_output_path.",
         }
 
     layout_dict = _finalize_core(
@@ -233,6 +377,8 @@ def _writeback_mo_core(
     comp_updated = 0
     conn_updated = 0
     writeback_error = ""
+    writeback_applied = False
+    writeback_diagnostics: List[Dict[str, Any]] = []
     try:
         layout_payload = layout_dict.get("generation_result", {}) if isinstance(layout_dict, dict) else {}
         layout_graph = layout_payload.get("layout_graph", {}) if isinstance(layout_payload, dict) else {}
@@ -241,7 +387,9 @@ def _writeback_mo_core(
             patched_code, stats = _apply_layout_graph_to_modelica_code(original_code, layout_graph)
             comp_updated = int(stats.get("components_updated", 0))
             conn_updated = int(stats.get("connects_updated", 0))
-            if patched_code != original_code:
+            writeback_diagnostics = list(stats.get("diagnostics", []) or [])
+            writeback_applied = patched_code != original_code
+            if writeback_applied:
                 output_path.write_text(patched_code, encoding="utf-8")
     except Exception as exc:
         writeback_error = str(exc)
@@ -253,7 +401,33 @@ def _writeback_mo_core(
         "edges": layout_dict.get("edges", 0),
         "components_updated": comp_updated,
         "connects_updated": conn_updated,
+        "writeback_applied": writeback_applied,
+        "source_text_written": wrote_model,
+        "annotations_written": writeback_applied,
+        "disk_changed": bool(wrote_model or writeback_applied),
+        "graph_source": graph_source,
+        "flag_notes": {
+            "model_written": (
+                "True only if incoming modelica_code was saved as the whole .mo. "
+                "Patching Placement/Line on an existing file leaves this false."
+            ),
+            "writeback_applied": (
+                "True if Placement/Line annotations in the .mo were changed. "
+                "This is the flag that means diagram writeback hit disk."
+            ),
+        },
     }
+    if graph_diagnostics:
+        out["diagnostics"] = graph_diagnostics
+        if out.get("success"):
+            out["diagnostics_are_fatal"] = False
+            out["agent_hint"] = (
+                "diagnostics are non-fatal parser notes. "
+                "If writeback_applied is true, Placement/Line were written; "
+                "do not hand-edit the .mo to 'fix' layout."
+            )
+    if writeback_diagnostics:
+        out["writeback_diagnostics"] = writeback_diagnostics
     if writeback_error:
         out["writeback_error"] = writeback_error
     if out.get("success") and output_path.exists():
@@ -269,10 +443,37 @@ def _writeback_mo_core(
             out["reload_after_writeback"] = json.loads(raw_r)
         except Exception as exc:
             out["reload_after_writeback"] = {"ok": False, "error": str(exc)}
+        reload_info = out.get("reload_after_writeback")
+        reload_ok = isinstance(reload_info, dict) and bool(reload_info.get("ok"))
+        if reload_ok and int(out.get("edges") or 0) >= 1:
+            # Placement + connect() are on disk; official RouteLine owns the wire geometry.
+            official = persist_official_routeline(
+                name,
+                save_folder=str(output_path.parent),
+                overwrite_existing=True,
+            )
+            out["official_route"] = official
+            if official.get("ok"):
+                out["router"] = "official"
+            else:
+                out["router"] = "builtin"
+                out["official_route_fallback"] = official.get("error") or "RouteLine unavailable"
+            if out.get("disk_changed") and not official.get("persisted"):
+                out["layout_writeback_ok"] = True
+                out["session_persist_ok"] = False
+                out["agent_hint"] = (
+                    (out.get("agent_hint") + " ") if out.get("agent_hint") else ""
+                ) + (
+                    "disk_changed=true means Placement/Line are already on disk. "
+                    "SaveModel/SaveModelAs False after RouteLine is a persist conflict, "
+                    "not a smart_layout writeback failure."
+                )
+        else:
+            out["router"] = "builtin"
     return out
 
 
-@mcp.tool()
+@mcp.tool(annotations=writable_annotations())
 def smart_layout(
     mode: str = "layout_only",
     input_graph_json: str = "",
@@ -286,24 +487,35 @@ def smart_layout(
     graph_json_path: str = "",
     graph_json: str = "",
     auto_layout: bool = True,
+    auto_generate_graph: bool = True,
+    graph_parser: str = "modelica_34_ast",
     layout_output_json_path: str = "",
     timeout_seconds: int = 120,
 ) -> str:
-    """
-    Unified Sysplorer Smart Layout (pure Python): layout JSON, finalize generation payload, or write back .mo.
+    """Place components and route wires. Response includes ``ok`` aligned with ``success``.
 
-    mode:
-      layout_only (aliases: layout, compute) — graph JSON or path → layout file + layout dict.
-      finalize_generation (aliases: finalize) — generation_result_json envelope → merged payload with layout_graph.
-      writeback_mo (aliases: writeback, generate) — optional write modelica_code, run layout, patch Placement/Line on .mo.
-
-    Gate 6 / multi-connect assemblies: use mode=writeback_mo with model_output_path + graph_json (+ modelica_code if persisting new text).
+    | mode | required |
+    |------|----------|
+    | ``layout_only`` | ``input_graph_json`` or ``input_json_path`` |
+    | ``finalize_generation`` | ``generation_result_json`` |
+    | ``writeback_mo`` | ``model_name`` and a ``.mo`` (``model_output_path`` and/or ``modelica_code``) |
     """
     m = _normalize_smart_layout_mode(mode)
     try:
         if m == "layout_only":
             try:
-                return _json(_layout_only_core(input_graph_json, input_json_path, output_json_path))
+                return _json(
+                    _layout_only_core(
+                        input_graph_json,
+                        input_json_path,
+                        output_json_path,
+                        graph_json=graph_json,
+                        graph_json_path=graph_json_path,
+                        model_name=model_name,
+                        modelica_code=modelica_code,
+                        model_output_path=model_output_path,
+                    )
+                )
             except json.JSONDecodeError as exc:
                 return _json({"success": False, "error": f"Invalid JSON: {exc}", "mode": m})
             except Exception as exc:
@@ -325,6 +537,8 @@ def smart_layout(
                         graph_json_path=graph_json_path,
                         graph_json=graph_json,
                         auto_layout=auto_layout,
+                        auto_generate_graph=auto_generate_graph,
+                        graph_parser=graph_parser,
                         layout_output_json_path=layout_output_json_path,
                         timeout_seconds=timeout_seconds,
                     )
@@ -345,7 +559,7 @@ def smart_layout(
         return _json({"success": False, "error": str(exc), "mode": m})
 
 
-def _parse_modelica_to_graph(modelica_code: str, model_name: str = "") -> Tuple[bool, Dict[str, Any], str]:
+def _parse_modelica_to_graph_legacy(modelica_code: str, model_name: str = "") -> Tuple[bool, Dict[str, Any], str]:
     """
     解析 Modelica 代码，自动提取组件和连接生成 layout graph
     返回: (success, graph_dict, error_msg)
@@ -414,6 +628,39 @@ def _parse_modelica_to_graph(modelica_code: str, model_name: str = "") -> Tuple[
         return False, {}, f"解析Modelica代码失败: {str(exc)}"
 
 
+def _parse_modelica_to_graph(modelica_code: str, model_name: str = "") -> Tuple[bool, Dict[str, Any], str]:
+    """
+    Generate a Smart Layout graph from Modelica source.
+
+    Prefer the Modelica 3.4 structure parser and keep the legacy regex extractor
+    as a compatibility fallback for partially supported sources.
+    """
+    try:
+        result = build_graph_from_modelica_34_source(modelica_code, model_name=model_name)
+        if result.ok and result.graph and not result.error:
+            return True, result.graph, ""
+        if result.ok and result.graph and "无需布局" in (result.error or ""):
+            return False, result.graph, result.error
+        legacy_ok, legacy_graph, legacy_err = _parse_modelica_to_graph_legacy(modelica_code, model_name=model_name)
+        if legacy_ok:
+            legacy_graph.setdefault("metadata", {})
+            if isinstance(legacy_graph["metadata"], dict):
+                legacy_graph["metadata"]["parser"] = "legacy_regex"
+                legacy_graph["metadata"]["fallback_from"] = "modelica_34_ast"
+                legacy_graph["metadata"]["modelica_34_ast_error"] = result.error
+            return True, legacy_graph, ""
+        return False, {}, result.error or legacy_err
+    except Exception as exc:
+        legacy_ok, legacy_graph, legacy_err = _parse_modelica_to_graph_legacy(modelica_code, model_name=model_name)
+        if legacy_ok:
+            legacy_graph.setdefault("metadata", {})
+            if isinstance(legacy_graph["metadata"], dict):
+                legacy_graph["metadata"]["parser"] = "legacy_regex"
+                legacy_graph["metadata"]["fallback_error"] = str(exc)
+            return True, legacy_graph, ""
+        return False, {}, f"解析Modelica代码失败: {str(exc)}; legacy: {legacy_err}"
+
+
 def run_smart_layout_for_fast_workflow(
     graph_json: str = "",
     graph_json_path: str = "",
@@ -434,27 +681,10 @@ def run_smart_layout_for_fast_workflow(
         return False, {"success": False, "error": f"model file not found: {p}"}
     stem = (model_name or "").strip() or p.stem
 
-    # 自动生成graph逻辑
     final_graph_json = graph_json.strip()
     final_graph_json_path = graph_json_path.strip()
 
-    if not final_graph_json and not final_graph_json_path and auto_generate_graph:
-        # 读取模型代码
-        modelica_code = p.read_text(encoding="utf-8")
-        parse_ok, graph, parse_err = _parse_modelica_to_graph(modelica_code, model_name=stem)
-        if not parse_ok:
-            if "无需布局" in (parse_err or ""):
-                return True, {
-                    "success": True,
-                    "skipped": True,
-                    "reason": parse_err,
-                    "components_updated": 0,
-                    "connects_updated": 0,
-                }
-            return False, {"success": False, "error": f"自动生成graph失败: {parse_err}"}
-        final_graph_json = json.dumps(graph, ensure_ascii=False)
-
-    if not final_graph_json and not final_graph_json_path:
+    if not final_graph_json and not final_graph_json_path and not auto_generate_graph:
         return False, {"success": False, "error": "graph_json/graph_json_path is required, or enable auto_generate_graph."}
 
     raw = smart_layout(
@@ -464,6 +694,8 @@ def run_smart_layout_for_fast_workflow(
         graph_json=final_graph_json,
         graph_json_path=final_graph_json_path,
         auto_layout=True,
+        auto_generate_graph=auto_generate_graph,
+        graph_parser="modelica_34_ast",
         layout_output_json_path=layout_output_json_path,
         timeout_seconds=timeout_seconds,
     )

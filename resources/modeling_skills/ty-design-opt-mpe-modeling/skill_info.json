@@ -1,0 +1,9 @@
+{
+  "英文名": "ty-design-opt-mpe-modeling",
+  "中文名": "DesignOptMpe 参数估计与自定义优化",
+  "版本号": "1.4.1",
+  "中文功能定位": "指导 Sysplorer 中的参数估计、稳态标定、多边界残差计算，以及基于批量仿真的自定义高性能优化流程。",
+  "英文功能定位": "Guide Sysplorer parameter estimation, steady-state calibration, multi-boundary residual design, and batch-simulation-backed custom high-performance optimization workflows.",
+  "中文分类": "设计优化与参数估计（脚本）",
+  "英文分类": "Design Optimization & Parameter Estimation (Scripting)"
+}

@@ -14,7 +14,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-# 手工基线仅为「主.次」数字，提交序号由 Git 单独追加；勿写成 "0.1.x" 等占位符
+# 手工基线仅为「主.次」数字，提交序号由 Git 单独追加；勿写成 "0.2.x" 等占位符
 _VERSION_BASE_RE = re.compile(r"^\d+\.\d+$")
 
 
@@ -57,8 +57,8 @@ def write_build_meta(
         raise SystemExit("package_version.json: version_base is required")
     if not _VERSION_BASE_RE.fullmatch(version_base):
         raise SystemExit(
-            'package_version.json: version_base must look like "0.1" (digits.digits only). '
-            'Do not use a placeholder such as "0.1.x" — internal builds append the git commit '
+            'package_version.json: version_base must look like "0.2" (digits.digits only). '
+            'Do not use a placeholder such as "0.2.x" — internal builds append the git commit '
             "count automatically."
         )
 

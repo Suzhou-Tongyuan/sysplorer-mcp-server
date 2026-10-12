@@ -1,0 +1,48 @@
+{
+  "scenario_id": "hydraulic-actuation-loop",
+  "system_type": "hydraulic",
+  "goal": "Build a minimum hydraulic actuation loop with explicit pressure, return, and actuator motion observations.",
+  "components": [
+    {
+      "id": "pSrc",
+      "type": "pressure_source",
+      "preferred_library": "TYHydraulics"
+    },
+    {
+      "id": "rv",
+      "type": "relief_valve",
+      "preferred_library": "TYHydraulics"
+    },
+    {
+      "id": "dcv",
+      "type": "directional_valve_4_3",
+      "preferred_library": "TYHydraulics",
+      "to_confirm": [
+        "center_function"
+      ]
+    },
+    {
+      "id": "cyl",
+      "type": "double_acting_cylinder",
+      "preferred_library": "TYHydraulics"
+    },
+    {
+      "id": "tnk",
+      "type": "tank",
+      "preferred_library": "TYHydraulics"
+    }
+  ],
+  "topology": [
+    "pSrc.port -> dcv.P",
+    "pSrc.port -> rv.inlet",
+    "rv.outlet -> tnk.port",
+    "dcv.T -> tnk.port",
+    "dcv.A -> cyl.A",
+    "dcv.B -> cyl.B"
+  ],
+  "validation_targets": [
+    "cyl displacement",
+    "pressure at source and cylinder chambers",
+    "main working-line flow rate"
+  ]
+}

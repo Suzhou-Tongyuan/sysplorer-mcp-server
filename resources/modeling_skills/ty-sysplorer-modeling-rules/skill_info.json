@@ -1,0 +1,9 @@
+{
+  "英文名": "ty-sysplorer-modeling-rules",
+  "中文名": "Sysplorer 建模总规则",
+  "版本号": "1.9.2",
+  "中文功能定位": "用于处理具体的 Modelica 物理模型、商业库模型、Modelica 库与 Modelica+Sysblock 混合建模的规划、评审、修改、分阶段验证和交付；也在用户明确要求时，为 Modelica 模型、案例或测试对象生成或同步 Documentation 帮助信息。普通 Sysblock 框图、Sysblock 信号与通信、纯 API 查询和纯结果读取不使用本 skill；第一阶段不为 Sysblock 生成本文档体系。 已有模型具体故障由独立调试 Skill 主导；本 Skill 按需提供物理修改和交付约束，不重新分流。",
+  "英文功能定位": "Use for planning, reviewing, modifying, validating, and delivering concrete Sysplorer Modelica physical models, commercial-library models, Modelica libraries, and Modelica-plus-Sysblock hybrids, and for explicitly requested Modelica Documentation authoring or synchronization for models, examples, and test-case designs. Do not use this documentation route for Sysblock in phase one. Concrete existing-model faults use independent debugging skills; this skill supplies applicable physical edit/delivery constraints without restarting routing.",
+  "中文分类": "模型开发调试（Model Development & Debugging）",
+  "英文分类": "Model Development & Debugging"
+}

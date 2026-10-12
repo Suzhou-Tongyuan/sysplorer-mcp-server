@@ -1,0 +1,26 @@
+{
+  "scenario_name": "single-phase-liquid-open-loop",
+  "system_type": "thermofluid",
+  "preferred_library": "TYThermoFluidSys",
+  "required_parameters": [
+    "medium_package",
+    "phase_assumption",
+    "inlet_pressure",
+    "inlet_temperature",
+    "nominal_mass_flow_rate",
+    "outlet_boundary_condition",
+    "driver_or_pump_setting",
+    "main_pipe_geometry",
+    "heat_load_or_cooling_load"
+  ],
+  "key_variables": [
+    "inletPressure",
+    "outletPressure",
+    "massFlowRate",
+    "outletTemperature"
+  ],
+  "notes": [
+    "Build the open-loop chain first, then close it after the checks required by the requested terminal stage. File delivery or offline review does not automatically start Sysplorer. Explicit live read-only queries do not authorize extra model checks, simulation, or edits; check-only work does not add translation or simulation.",
+    "Read key_variables only when required by agreed result acceptance. If the medium is still provisional, state the temporary assumption in the delivery summary."
+  ]
+}

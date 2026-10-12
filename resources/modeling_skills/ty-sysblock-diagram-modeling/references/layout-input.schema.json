@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sysblock-layout-input/v1",
+  "title": "Geometry-free Sysblock layout testcase",
+  "type": "object",
+  "required": ["schema", "case_id", "levels", "charts", "policies"],
+  "properties": {
+    "schema": {"const": "sysblock-layout-input/v1"},
+    "case_id": {"type": "string", "minLength": 1},
+    "description": {"type": "string"},
+    "levels": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "nodes", "edges", "feedback_paths"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "nodes": {"type": "array", "items": {"$ref": "#/$defs/node"}},
+          "edges": {"type": "array", "items": {"$ref": "#/$defs/edge"}},
+          "feedback_paths": {"type": "array", "items": {"$ref": "#/$defs/feedback"}}
+        },
+        "additionalProperties": false
+      }
+    },
+    "charts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "decomposition", "default_state", "states", "transitions"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "decomposition": {"enum": ["exclusive", "parallel"]},
+          "default_state": {"type": ["string", "null"], "minLength": 1},
+          "states": {"type": "array", "items": {"$ref": "#/$defs/state"}},
+          "transitions": {"type": "array", "items": {"$ref": "#/$defs/transition"}}
+        },
+        "additionalProperties": false
+      }
+    },
+    "policies": {
+      "type": "object",
+      "required": ["ordinary_size", "resizable_kinds", "topology_frozen"],
+      "properties": {
+        "ordinary_size": {"const": "standard"},
+        "resizable_kinds": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "topology_frozen": {"const": true},
+        "uniform_subsystem_size_allowed": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "node": {
+      "type": "object",
+      "required": ["id", "kind", "name", "inputs", "outputs"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "kind": {"type": "string", "minLength": 1},
+        "name": {"type": "string"},
+        "inputs": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "outputs": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "parameters": {"type": "object"},
+        "semantic_role": {"type": "string"},
+        "required": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "edge": {
+      "type": "object",
+      "required": ["id", "source", "source_port", "target", "target_port"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "source": {"type": "string", "minLength": 1},
+        "source_port": {"type": "string", "minLength": 1},
+        "target": {"type": "string", "minLength": 1},
+        "target_port": {"type": "string", "minLength": 1},
+        "one_to_one_interface": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "feedback": {
+      "type": "object",
+      "required": ["id", "edge_ids", "member_node_ids", "signal_flow"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "edge_ids": {"type": "array", "items": {"type": "string"}, "minItems": 1, "uniqueItems": true},
+        "member_node_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "signal_flow": {"const": "right_to_left"}
+      },
+      "additionalProperties": false
+    },
+    "state": {
+      "type": "object",
+      "required": ["id", "name"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "name": {"type": "string", "minLength": 1},
+        "label": {"type": "string"},
+        "parent": {"type": ["string", "null"]},
+        "decomposition": {"enum": ["exclusive", "parallel"]}
+      },
+      "additionalProperties": false
+    },
+    "transition": {
+      "type": "object",
+      "required": ["id", "source", "target", "label", "priority"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "source": {"type": ["string", "null"]},
+        "target": {"type": "string", "minLength": 1},
+        "label": {"type": "string"},
+        "priority": {"type": "integer", "minimum": 1}
+      },
+      "additionalProperties": false
+    }
+  }
+}

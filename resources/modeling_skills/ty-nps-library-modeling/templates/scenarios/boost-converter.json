@@ -1,0 +1,38 @@
+{
+    "id":  "boost-converter",
+    "system_type":  "DC-DC boost converter",
+    "modeling_objective":  "Build a minimum runnable boost converter and verify output voltage boost behavior under PWM control.",
+    "main_power_path":  [
+                            "DC source",
+                            "inductor",
+                            "switch",
+                            "diode",
+                            "output capacitor",
+                            "load"
+                        ],
+    "mandatory_support_blocks":  [
+                                     "ground",
+                                     "PWM generator",
+                                     "voltage measurement",
+                                     "current measurement"
+                                 ],
+    "required_parameters":  [
+                                "input voltage",
+                                "switching frequency",
+                                "inductance",
+                                "capacitance",
+                                "load value",
+                                "initial duty ratio"
+                            ],
+    "key_results":  [
+                        "output voltage",
+                        "inductor current",
+                        "duty ratio"
+                    ],
+    "simulation_baseline":  {
+                                "solver_requirement":  "Algorithm=InlineImplicitEuler",
+                                "annotation_requirement":  "experiment(Algorithm=InlineImplicitEuler, InlineIntegrator=true, InlineStepSize=false, Interval=<step>, StartTime=0, StopTime=2, Tolerance=0.0001, IntegratorStep=<step>, StoreEventValue=0)",
+                                "default_step":  "5e-5",
+                                "step_rule":  "choose <step> from PWM frequency, fastest physical sampling step, or control period; keep Interval and IntegratorStep equal; use step <= fastest relevant period / 10 when no stronger rule exists"
+                            }
+}

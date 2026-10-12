@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-from path_config import RESOURCES_MANIFEST_FILENAME, get_resources_root
+from path_config import DEPLOY_ROOT, RESOURCES_MANIFEST_FILENAME, WORKSPACE_ROOT, get_resources_root
 
 
 @dataclass
@@ -18,9 +18,10 @@ class CorpusEntry:
     path: str
     default_index: bool
     keywords: List[str]
+    index_file: str = ""
 
-    def to_public_dict(self, resolved: Path) -> Dict[str, Any]:
-        return {
+    def to_public_dict(self, resolved: Path, resources_root: Optional[Path] = None) -> Dict[str, Any]:
+        out: Dict[str, Any] = {
             "id": self.id,
             "title": self.title,
             "description": self.description,
@@ -30,6 +31,27 @@ class CorpusEntry:
             "resolved_paths": [str(resolved.resolve())] if resolved.exists() else [],
             "exists": resolved.exists(),
         }
+        rel_idx = (self.index_file or "").strip().replace("\\", "/")
+        if rel_idx:
+            out["index_file"] = rel_idx
+            if resources_root is not None:
+                ip = (resources_root / rel_idx).resolve()
+                try:
+                    ip.relative_to(resources_root.resolve())
+                except ValueError:
+                    pass
+                else:
+                    out["index_resolved_path"] = str(ip)
+                    out["index_exists"] = ip.is_file()
+                    for base in (WORKSPACE_ROOT.resolve(), DEPLOY_ROOT.resolve()):
+                        try:
+                            out["resources_retrieval_index_path"] = ip.relative_to(base).as_posix()
+                            break
+                        except ValueError:
+                            continue
+                    else:
+                        out["resources_retrieval_index_path"] = rel_idx
+        return out
 
 
 def _as_str(v: Any, field: str) -> str:
@@ -129,6 +151,7 @@ def _parse_corpus_entries_v1(raw_corpora: List[Any]) -> List[CorpusEntry]:
                 path=rel.rstrip("/\\").replace("\\", "/"),
                 default_index=_as_bool(item.get("default_index", False), "default_index"),
                 keywords=_as_str_list(item.get("keywords"), "keywords"),
+                index_file=_as_optional_str(item.get("index_file")).replace("\\", "/"),
             )
         )
     return entries
@@ -160,6 +183,7 @@ def _parse_corpus_entries_v2_resource_categories(data: Dict[str, Any]) -> List[C
             raise ValueError(f"resource_categories[{i}].path must be relative to resources root")
         title = _as_optional_str(item.get("title")) or _as_optional_str(item.get("name")) or cid
         desc = _as_str(item.get("description"), "description")
+        idx_rel = _as_optional_str(item.get("index_file")).replace("\\", "/")
         entries.append(
             CorpusEntry(
                 id=cid,
@@ -168,6 +192,7 @@ def _parse_corpus_entries_v2_resource_categories(data: Dict[str, Any]) -> List[C
                 path=rel.rstrip("/\\").replace("\\", "/"),
                 default_index=cid in default_ids,
                 keywords=_keywords_from_item(item),
+                index_file=idx_rel,
             )
         )
     return entries
@@ -228,6 +253,42 @@ def corpora_paths_for_default_index(entries: List[CorpusEntry], resources_root: 
     return out
 
 
+def _format_mcp_lazy_reference_docs(items: Any) -> List[str]:
+    """Render mcp_instructions.lazy_reference_markdown from manifest JSON."""
+    if not isinstance(items, list) or not items:
+        return []
+    out: List[str] = [
+        "",
+        "### modeling_rules 语料（`ty-sysplorer-modeling-rules/references/`，**建模必须遵守**；按需经语料检索，勿在初始化时当作必读全文）",
+        "",
+    ]
+    for raw in items:
+        if not isinstance(raw, dict):
+            continue
+        rid = str(raw.get("id", "")).strip() or "?"
+        rel = str(raw.get("path", "")).strip()
+        corpus = str(raw.get("corpus_id", "")).strip()
+        when = str(raw.get("when_to_load_zh", "")).strip()
+        kws = raw.get("trigger_keywords")
+        kw_list: List[str] = []
+        if isinstance(kws, list):
+            kw_list = [str(k).strip() for k in kws if str(k).strip()]
+        elif isinstance(kws, str) and kws.strip():
+            kw_list = [kws.strip()]
+        kw_preview = "、".join(kw_list[:16])
+        if len(kw_list) > 16:
+            kw_preview += "…"
+        out.append(f"- **`{rid}`** (`{rel}`)")
+        if corpus:
+            out.append(f"  - 语料 `corpus_id`: `{corpus}`")
+        if when:
+            out.append(f"  - 何时加载: {when}")
+        if kw_preview:
+            out.append(f"  - 触发关键词: {kw_preview}")
+        out.append("")
+    return out
+
+
 def _manifest_item_priority(item: Dict[str, Any]) -> int:
     p = item.get("priority", 99)
     if isinstance(p, bool):
@@ -278,12 +339,33 @@ def browse_resources_manifest_for_instructions(
         "",
         "## 旁置文档语料（检索时机）",
         "",
-        "摘要来自 exe/进程旁置的 `resources/resources_manifest.json`，**不要在会话开头对语料做全文搜索**；"
-        "仅当用户任务与下述某一类主题相关时，再调用 `resources_retrieval(action=\"search\")`，"
-        "或用 `resources_retrieval(action=\"corpora\")` 查看解析后的路径与 `corpus_id`。",
-        "",
-        f"- 资源根目录: `{root}`",
     ]
+    mi = data.get("mcp_instructions")
+    if isinstance(mi, dict):
+        pol = str(mi.get("session_policy_zh", "")).strip()
+        if pol:
+            lines.append(pol)
+            lines.append("")
+        lines.extend(_format_mcp_lazy_reference_docs(mi.get("lazy_reference_markdown")))
+        msk = str(mi.get("modeling_skills_load_policy_zh", "")).strip()
+        if msk:
+            lines.extend(
+                [
+                    "### Agent Skill（`modeling_skill_*`）总策略",
+                    "",
+                    msk,
+                    "",
+                ]
+            )
+    lines.extend(
+        [
+            "摘要来自 exe/进程旁置的 `resources/resources_manifest.json`，**不要在会话开头对语料做全文搜索**；"
+            "仅当用户任务与下述某一类主题相关时，再调用 `resources_retrieval(action=\"search\")`，"
+            "或用 `resources_retrieval(action=\"corpora\")` 查看解析后的路径与 `corpus_id`。",
+            "",
+            f"- 资源根目录: `{root}`",
+        ]
+    )
     ver = data.get("version", "")
     if ver != "" and ver is not None:
         lines.append(f"- 清单 version: {ver}")
@@ -329,10 +411,16 @@ def browse_resources_manifest_for_instructions(
         if len(kw_list) > 14:
             kw_preview += "…"
         lines.append(f"### `{cid}` — {title}")
+        when_mcp = str(item.get("mcp_when_to_load_zh", "")).strip()
+        if when_mcp:
+            lines.append(f"- **MCP 何时加载**: {when_mcp}")
         if desc:
             lines.append(f"- 说明: {desc}")
         if rel_path:
             lines.append(f"- 相对目录: `{rel_path}`")
+        idx_rel = str(item.get("index_file", "")).strip()
+        if idx_rel:
+            lines.append(f"- 预生成 RAG 索引（`resources_retrieval` 的 `index_path`）: `{idx_rel}`")
         if kw_preview:
             lines.append(f"- 何时检索: 任务/问题与上述主题或关键词相关时 → {kw_preview}")
         lines.append("")
@@ -344,8 +432,12 @@ def browse_resources_manifest_for_instructions(
     return "\n".join(lines), meta
 
 
-MODELING_PATH_ROUTER_REL = "modeling_rules/modeling_path_router.md"
-SEVEN_GATES_WORKFLOW_REL = "modeling_rules/seven_gates_workflow.md"
+MODELING_PATH_ROUTER_REL = (
+    "modeling_skills/ty-sysplorer-modeling-rules/references/modeling_path_router.md"
+)
+SEVEN_GATES_WORKFLOW_REL = (
+    "modeling_skills/ty-sysplorer-modeling-rules/references/seven_gates_workflow.md"
+)
 _MAX_MODELING_ROUTER_BYTES = 512_000
 _MAX_SEVEN_GATES_WORKFLOW_BYTES = 512_000
 
@@ -354,7 +446,10 @@ def load_modeling_path_router_for_instructions(
     resources_root: Optional[Path] = None,
 ) -> Tuple[str, Dict[str, Any]]:
     """
-    Load modeling_path_router.md from resources for MCP server instructions (single file, no RAG).
+    Load modeling_path_router.md from resources (single file, no RAG).
+
+    Not used for default FastMCP ``instructions`` (startup text no longer embeds manifest
+    excerpts; use ``resources_retrieval`` for corpora). Kept for scripts or optional callers.
     """
     root = (resources_root if resources_root is not None else get_resources_root()).resolve()
     path = (root / MODELING_PATH_ROUTER_REL.replace("\\", "/")).resolve()
@@ -398,7 +493,9 @@ def load_modeling_path_router_for_instructions(
     meta["size_bytes"] = len(body.encode("utf-8"))
     frag = (
         "\n## 建模分流规则（会话开始前必读）\n\n"
-        "以下内容来自旁置 `resources/` 下的分流说明，**搭建或编辑模型时必须先判别 Modelica 物理模型与 Sysblock 框图**，再选对应流程。\n\n"
+        "以下内容来自旁置 `resources/` 下的分流说明。**须先按正文 §1 判别 Modelica 物理模型 vs Sysblock 框图**；"
+        "**仅 §1.1** 再做 §0（TY/TA 物理库预判）。"
+        "**用户已明确 Sysblock / 框图 / SysplorerEmbeddedCoder / `run_sysplorer_api` 建块图 → 直接 §3，跳过 §0，禁止用 TY 物理库搭框图。**\n\n"
         "---\n\n"
         f"{body.rstrip()}\n\n"
         "---\n"
@@ -410,7 +507,9 @@ def load_seven_gates_workflow_for_instructions(
     resources_root: Optional[Path] = None,
 ) -> Tuple[str, Dict[str, Any]]:
     """
-    Load seven_gates_workflow.md (7 Gates + closed-loop workflow from AGENTS.md) for MCP instructions.
+    Load seven_gates_workflow.md (7 Gates + closed-loop workflow).
+
+    Not used for default FastMCP ``instructions``; see ``load_modeling_path_router_for_instructions``.
     """
     root = (resources_root if resources_root is not None else get_resources_root()).resolve()
     path = (root / SEVEN_GATES_WORKFLOW_REL.replace("\\", "/")).resolve()
@@ -434,7 +533,7 @@ def load_seven_gates_workflow_for_instructions(
             "\n## 七 Gate 与建模执行闭环\n\n"
             f"未找到 `{SEVEN_GATES_WORKFLOW_REL}`。\n"
             f"预期路径: `{path}`\n\n"
-            "请在工作区查阅 `AGENTS.md` / `CLAUDE.md`，或通过语料检索 modeling_rules。\n"
+            "请通过语料检索 `corpus_id=modeling_rules`，或直接打开 resources 下 `modeling_skills/ty-sysplorer-modeling-rules/references/seven_gates_workflow.md`。\n"
         )
         return frag, meta
 
@@ -454,7 +553,7 @@ def load_seven_gates_workflow_for_instructions(
     meta["size_bytes"] = len(body.encode("utf-8"))
     frag = (
         "\n## 七 Gate 与建模执行闭环（会话开始前必读）\n\n"
-        "以下内容来自旁置 `resources/modeling_rules/seven_gates_workflow.md`，与仓库 `AGENTS.md` 对齐。\n\n"
+        "以下内容来自旁置 `resources/modeling_skills/ty-sysplorer-modeling-rules/references/seven_gates_workflow.md`。\n\n"
         "---\n\n"
         f"{body.rstrip()}\n\n"
         "---\n"

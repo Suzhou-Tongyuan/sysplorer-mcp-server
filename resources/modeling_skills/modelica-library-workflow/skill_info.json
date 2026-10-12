@@ -1,0 +1,9 @@
+{
+  "英文名": "modelica-library-workflow",
+  "中文名": "Modelica 模型库开发流程",
+  "版本号": "1.1.2",
+  "中文功能定位": "仅在已应用 ty-sysplorer-modeling-rules 且目标涉及 Modelica 库结构、公共接口、Examples / Tests、库级本地化或治理时使用；普通单模型不触发。验证与文档继承用户请求，模板规则仅在采用模板时适用。",
+  "英文功能定位": "After ty-sysplorer-modeling-rules, use only for Modelica library structure, public interfaces, Examples/Tests, library localization, or governance. Exclude ordinary single-model tasks; inherit requested validation and documentation scope, and apply template rules only when adopted.",
+  "中文分类": "模型开发调试（Model Development & Debugging）",
+  "英文分类": "Model Development & Debugging"
+}

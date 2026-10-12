@@ -1,0 +1,9 @@
+{
+  "name": "ty-design-opt-exp-gui-modeling",
+  "display_name": "DesignOptExpGui 模型试验",
+  "version": "1.4.0",
+  "description": "指导 Sysplorer DesignOptExpGui 模型试验 Python API 的使用，包括批量研究、实验设计、蒙特卡洛、时变参数研究与结果读取。",
+  "description_en": "Guide Sysplorer DesignOptExpGui model experiment Python API usage for batch studies, DOE, Monte Carlo, time-varying parameters, result extraction, and generating design or sampling data for DesignOptExp batch simulation.",
+  "category": "设计优化 / 模型试验",
+  "category_en": "Design Optimization / Model Experiment"
+}

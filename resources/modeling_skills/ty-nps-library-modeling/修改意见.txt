@@ -1,0 +1,198 @@
+请修改 `ty-nps-library-modeling` 路径下的建模 skill，要求保留原有目录结构和已有文件组织方式，只修改相关文件或新增必要文件，不要重构整个 skill。
+
+本次修改目标是根据以下意见优化 Agent 建模效率、MCP 工具调用准确性、NPSLibrary 组件检索效率和案例检索效率。
+
+## 一、强化 Sysplorer / Syslab MCP 工具边界
+
+请在 Agent 系统提示或 MCP 工具使用文档中补充说明：
+
+1. Sysplorer MCP 用于图形建模、创建模型、添加组件、连线、设置参数、Check、Translate、Simulate。
+2. Syslab MCP 用于脚本运行、算法验证、数据处理、M 语言 / Julia / Python 类任务，不应用于 Sysplorer 图形建模。
+3. 建模任务中禁止混用 Syslab 和 Sysplorer 工具，除非任务明确涉及脚本算法验证。
+4. 禁止把 Syslab 报错处理方式套用到 Sysplorer API 建模。
+
+## 二、补充 Sysplorer API 正确调用规范
+
+请在现有 MCP 工具文档或新增 `reference/sysplorer_api_usage.md` 中补充以下内容：
+
+1. `NewModel` 创建普通模型时，`restriction` 使用默认值 `"model"`，不要随意传入 `"block"`、`"package"` 等。
+2. `AddComponent` 使用组件类型路径、实例名、位置等必要参数，不要把 `annotation` 作为 API 参数传入。
+3. 组件参数设置建议优先通过直接写 `.mo` 文件的方式内联到组件声明中，例如：
+
+```modelica
+NPSLibrary.xxx.Component comp1(parameterA = 1, parameterB = 2)
+  annotation(Placement(transformation(origin={0,0}, extent={{-10,-10},{10,10}})));
+```
+
+4. 对复杂 annotation、Diagram、Icon、Placement、参数面板等内容，优先通过生成或修改 `.mo` 文件完成，不建议反复调用参数设置 API。
+
+## 三、为 NPSLibrary 建立高频组件快速索引
+
+请新增文件：
+
+```text
+reference/nps_component_quick_index.md
+```
+
+该文件用于建立 NPSLibrary 高频组件检索路径索引，减少 Agent 逐层查询库文档的开销。索引内容请按照以下路径整理：
+
+### 1. 接地与参考点组件
+
+接地组件优先使用 Modelica 标准库：
+
+```modelica
+Modelica.Electrical.Analog.Basic.Ground
+```
+
+如果三相系统缺少中性点接地，可以使用：
+
+```modelica
+Modelica.Electrical.Polyphase.Basic.Star
+```
+
+说明：
+
+* NPSLibrary 中如果找不到 Ground，不要反复搜索。
+* 单相或直流参考点优先使用 `Modelica.Electrical.Analog.Basic.Ground`。
+* 三相系统需要中性点时，优先使用 `Modelica.Electrical.Polyphase.Basic.Star` 汇集三相中性点后接地。
+* 如果接口不兼容，不要强行连接，应提示需要适配组件或人工确认。
+
+### 2. NPSLibrary 高频组件检索路径
+
+请在 `reference/nps_component_quick_index.md` 中加入以下索引表：
+
+| 组件类别                | 推荐检索路径                                                           | 说明                                      |
+| ------------------- | ---------------------------------------------------------------- | --------------------------------------- |
+| 接口                  | `NPSLibrary.Interfaces`                                          | 检索 PositivePlug、NegativePlug、三相接口等电气连接器 |
+| 传感器                 | `NPSLibrary.Sensors`                                             | 检索电压、电流、功率、RMS 等测量组件                    |
+| 电源                  | `NPSLibrary.Sources`                                             | 检索理想电源、三相电压源、受控源等                       |
+| 线路                  | `NPSLibrary.PowerSystem.TransmissionAndDistribution.Line`        | 检索三相线路、Pi 型线路、RL 线路等                    |
+| 负荷 / RLC 支路         | `NPSLibrary.PowerSystem.Load`                                    | 检索基础负荷、RLC 负荷等                          |
+| 动态负荷                | `NPSLibrary.PowerSystem.Load.DynamicLoad`                        | 检索动态负荷模型                                |
+| 恒功率负荷               | `NPSLibrary.PowerSystem.Load.ConstantPowerLoad`                  | 检索恒功率负荷模型                               |
+| 变压器                 | `NPSLibrary.PowerSystem.TransmissionAndDistribution.Transformer` | 检索两绕组、三绕组、Y/Δ 接线变压器等                    |
+| 电力电子半导体 / 变换器 / 发生器 | `NPSLibrary.PowerElectronics`                                    | 检索开关器件、整流器、逆变器、PWM、脉冲发生器等               |
+| 坐标变换                | `NPSLibrary.Utilities.Reference_System_Transformation`           | 检索 abc/dq、dq/abc、Clark、Park 等坐标变换       |
+| 控制 / 积分器 / 滤波器      | `NPSLibrary.Utilities.Control`                                   | 检索 PI、积分器、滤波器、控制器等                      |
+| 断路器                 | `NPSLibrary.PowerSystem.TransmissionAndDistribution.Breaker`     | 检索三相断路器、开关、故障切换相关组件                     |
+| 新能源光伏 / 电池 / 超级电容   | `NPSLibrary.PowerSystem.RenewableEnergy`                         | 检索 PV、电池、储能、超级电容等模型                     |
+| 同步电机 / 异步电机 / 风力电机  | `NPSLibrary.Motors`                                              | 检索同步机、异步机、风电机组等模型                       |
+
+### 3. 使用规则
+
+请在索引文件中明确：
+
+1. 高频组件优先查 `reference/nps_component_quick_index.md`。
+2. 快速索引能命中时，不要从 NPSLibrary 根目录逐层遍历。
+3. 只有索引路径不足以确定具体模型时，才调用 `get_lib_model_document` 查询具体组件文档。
+4. 对同一类别组件，优先批量查询，不要多次单点查询。
+5. 对语义相近的组件检索结果进行合并，例如“电压源”“三相电压源”“AC voltage source”不要重复展开。
+6. 对同一路径不要重复调用 `get_lib_model_document`。
+7. 单个建模任务中，除非确有必要，应控制深度遍历和重复文档查询次数。
+
+## 四、建立 Ground 等缺失组件的降级策略
+
+请新增或更新：
+
+```text
+reference/component_fallback_strategy.md
+```
+
+该文件用于说明 NPSLibrary 中缺失常见基础组件时的降级策略，重点包括 Ground、Reference、ElectricalReference、Neutral、Terminal 等参考点组件。
+
+请写入以下规则：
+
+1. 如果 NPSLibrary 中找不到 Ground，不要反复搜索。
+2. 单相或直流系统接地优先使用：
+
+```modelica
+Modelica.Electrical.Analog.Basic.Ground
+```
+
+3. 三相系统如果缺少中性点接地，可以使用：
+
+```modelica
+Modelica.Electrical.Polyphase.Basic.Star
+```
+
+将三相连接到 Star 后，再使用 Ground 接参考点。
+
+4. 如果 NPS 接口和 Modelica 标准库接口不兼容，不要强行连接，应采取以下策略：
+
+   * 优先寻找 NPSLibrary 内部等效参考点组件；
+   * 其次考虑同库适配组件；
+   * 仍无法连接时，提示需要人工确认接口适配方式。
+5. Ground、Reference、ElectricalReference、Neutral、Terminal 等常见参考点组件最多搜索 2 次；仍找不到时触发降级策略。
+6. 对库中缺失的常见基础组件，应优先参考 fallback 文档，而不是继续逐层遍历库。
+
+## 五、补充 NPSLibrary 示例案例检索路径
+
+请在 Agent 提示词、README、SKILL.md 或新增参考文件中补充 NPSLibrary 示例模型的检索路径。
+
+NPSLibrary 案例检索路径位于软件安装目录下，一般情况下为：
+```text
+Sysplorer 2026a\Docs\EleLib\Samples\NPSLibrary
+```
+
+请明确以下规则：
+
+1. 当用户要求“参考已有案例”“查找 NPS 示例模型”“基于案例搭建模型”“参考官方样例”时，优先检索该路径。
+2. 高频案例不要通过库模型文档深度遍历查找，应优先从 Samples 路径检索。
+3. 如果任务是电力系统、变压器、线路、负荷、电力电子、新能源、电机等 NPSLibrary 相关建模，应优先考虑该 Samples 路径中是否存在可复用案例。
+4. 检索案例时应先根据场景关键词过滤，例如：
+
+   * Line / Transmission / Distribution；
+   * Transformer；
+   * Load / RLC / ConstantPowerLoad；
+   * PowerElectronics / Rectifier / Inverter / PWM；
+   * RenewableEnergy / PV / Battery；
+   * Motors / Synchronous / Asynchronous / Wind。
+5. 找到案例后，应优先复用其组件路径、参数写法、连线方式和 annotation 风格，而不是重新从零搜索库组件。
+6. 如果案例路径不存在或未配置，应提示用户确认 Sysplorer 安装路径，而不是继续无目的检索。
+
+## 六、优化资源检索与文档查询策略
+
+请在 Agent 提示词或检索规范中补充：
+
+1. 避免重复调用 `get_lib_model_document` 查询相同路径。
+2. 对相似组件查询结果进行去重和语义聚合。
+3. 高频信息优先查快速索引，索引不足时再查库文档。
+4. 高频案例优先查：
+
+```text
+Sysplorer 2026a\Docs\EleLib\Samples\NPSLibrary
+```
+
+5. 对同一类组件尽量批量查询，而不是多次单点查询。
+6. 对资源检索结果进行去重，避免多次展开相同或高度相似内容。
+7. 单个建模任务中，除非确有必要，应控制深度遍历和重复文档查询次数。
+8. 如果已经通过快速索引或示例案例确认组件路径，不要再重复查询上级目录。
+
+## 七、保持原有结构
+
+1. 不删除原有目录。
+2. 不重构 skill 框架。
+3. 不改动无关文件。
+4. 只修改与 Agent 提示、MCP 工具使用说明、NPSLibrary 快速索引、组件降级策略、案例检索路径、资源检索优化相关的文件。
+5. 修改完成后输出变更摘要，列出新增文件、修改文件和每个文件的修改目的。
+
+建议优先修改或新增以下文件：
+
+```text
+ty-nps-library-modeling/
+├─ agents/
+│  └─ openai.yaml
+├─ reference/
+│  ├─ sysplorer_api_usage.md
+│  ├─ nps_component_quick_index.md
+│  └─ component_fallback_strategy.md
+└─ README.md 或 SKILL.md
+```
+
+其中：
+
+* `agents/openai.yaml`：补充 Sysplorer / Syslab MCP 工具边界、检索策略、案例检索路径；
+* `reference/sysplorer_api_usage.md`：补充 Sysplorer API 正确调用示例；
+* `reference/nps_component_quick_index.md`：新增 NPSLibrary 高频组件快速索引；
+* `reference/component_fallback_strategy.md`：新增 Ground 等缺失组件降级策略；
+* `README.md` 或 `SKILL.md`：只补充入口说明，不大改原结构。

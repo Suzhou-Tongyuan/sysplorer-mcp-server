@@ -1,0 +1,9 @@
+{
+  "英文名": "ty-sysplorer-dependency-guard",
+  "中文名": "Sysplorer 模型库依赖保障",
+  "版本号": "1.0.0",
+  "中文功能定位": "确保 Sysplorer 建模前按清单解析、下载、安装并加载缺失模型库",
+  "英文功能定位": "Ensures Sysplorer model-library dependencies are catalog-resolved, downloaded, installed, refreshed, loaded, and verified before modeling continues.",
+  "中文分类": "建模范式与路径路由",
+  "英文分类": "Modeling Path Router"
+}

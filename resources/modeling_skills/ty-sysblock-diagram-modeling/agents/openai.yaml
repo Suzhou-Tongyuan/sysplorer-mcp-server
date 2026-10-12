@@ -1,0 +1,43 @@
+interface:
+  display_name: "Sysblock Diagram Modeling"
+  short_description: "Build, tighten, and repeatably evaluate Sysblock layouts with official APIs"
+  default_prompt: |
+    Use $ty-sysblock-diagram-modeling to create, edit, wire, parameterize, and verify Sysblock block-diagram models.
+    Use `SysplorerEmbeddedCoder` components through `call_code(mode="run_sysplorer_api")` and official Sysplorer APIs.
+    Resolve only the exact APIs needed, using known contracts with zero probes. Freeze semantics/topology, create and audit a geometry-free reusable layout input, then generate a hash-bound compact layout plan before mutating the formal model.
+    For StateMachine transitions with insufficient projection overlap, translate or bounded-scale/push state rectangles before routing; do not iterate corner connections.
+    Prefer the agent's current working directory or explicit user paths for model files; call `GetDirectory` only when the current Sysplorer directory is required.
+
+trigger:
+  keywords:
+    - "Sysblock"
+    - "block diagram"
+    - "embedded control"
+    - "PI control"
+    - "PID control"
+    - "transfer function"
+    - "TransferFcn"
+    - "integrator"
+    - "Integrator"
+    - "control system"
+    - "compact layout"
+    - "reduce blank space"
+    - "subsystem layout"
+    - "layout testcase"
+    - "layout evaluation"
+
+  exclusion_keywords:
+    - "hydraulic"
+    - "pneumatic"
+    - "mechanical"
+    - "Modelica physical"
+    - "physical modeling"
+    - "TYHydraulics"
+    - "TYPneumatics"
+
+  model_types:
+    - "Sysblock"
+
+policy:
+  allow_implicit_invocation: true
+  require_confirmation: false

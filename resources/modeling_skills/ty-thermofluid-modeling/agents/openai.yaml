@@ -1,0 +1,7 @@
+interface:
+  display_name: "TY 热流体建模"
+  short_description: "用户明确指定或父规则已选 TY 热流体商业组件后使用，支持标准库与商业库组合"
+  default_prompt: "当用户指定或 ty-sysplorer-modeling-rules / 有效上下文已选 TYMedia、TYThermoFluidSys、TYAirTreatmentAndVentilation 时使用 $ty-thermofluid-modeling。未指定库先按父规则判断标准库能力，满足则标准库，不足则保留可用标准库并补充商业组件。本技能只约束热流体子系统；按请求执行到指定阶段，已有具体故障由独立调试入口主导。"
+
+policy:
+  allow_implicit_invocation: true

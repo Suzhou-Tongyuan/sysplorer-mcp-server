@@ -1,17 +1,39 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-Configure Claude / OpenCode / Codex CLI MCP to run sysplorer_mcp via Sysplorer bundled Python and a launcher main.py next to this script.
+Configure Claude / OpenCode / Codex CLI / Modelex MCP to run sysplorer via Sysplorer bundled Python and a launcher main.py next to this script.
 .PARAMETER MworksInstallDir
-    Sysplorer installation root (used only for python.exe and --mworks-install-dir). If omitted, you are prompted (with a default path).
+    Sysplorer installation root (used only for python.exe and --mworks-install-dir). Alias: -d. If omitted, you are prompted (with a default path).
+.PARAMETER SysplorerPlatformLabel
+    Value for --sysplorer-platform-label written into MCP client configs. Alias: -p. If omitted, you are prompted (with a default label).
 .NOTES
+    Silent / non-interactive install: pass both -d and -p, or set env MWORKS_INSTALL_DIR and SYSPLORER_PLATFORM_LABEL.
+    Example: .\install_mcp.ps1 -d "C:\Program Files\MWORKS\Sysplorer 2026a" -p "Sysplorer 2026b"
     main.py / sysplorer-mcp-server / resources must sit in the same folder as this install script. That bundle path is written to MCP config as an absolute path and does not depend on Sysplorer's install location (any directory is fine, not only Tools/sysplorer_mcp).
 #>
 param(
-    [string]$MworksInstallDir = $null
+    [Alias("d")]
+    [string]$MworksInstallDir = $null,
+    [Alias("p")]
+    [string]$SysplorerPlatformLabel = $null
 )
 
+if ([string]::IsNullOrWhiteSpace($MworksInstallDir) -and -not [string]::IsNullOrWhiteSpace($env:MWORKS_INSTALL_DIR)) {
+    $MworksInstallDir = $env:MWORKS_INSTALL_DIR
+}
+if ([string]::IsNullOrWhiteSpace($SysplorerPlatformLabel) -and -not [string]::IsNullOrWhiteSpace($env:SYSPLORER_PLATFORM_LABEL)) {
+    $SysplorerPlatformLabel = $env:SYSPLORER_PLATFORM_LABEL
+}
+
+$silentInstall = -not [string]::IsNullOrWhiteSpace($MworksInstallDir) -and -not [string]::IsNullOrWhiteSpace($SysplorerPlatformLabel)
+
 $ErrorActionPreference = "Continue"
+$McpClientKey = "sysplorer"
+$LegacyMcpKeys = @("sysplorer_mcp", "mworks_mcp")
+# OpenCode 本地 MCP 超时（毫秒），与 opencode.json 中各 MCP 条目的 timeout 字段一致
+$OpenCodeMcpTimeoutMs = 600000
+# Modelex 本地 MCP 超时（毫秒），与 ~/.modelex/mcp.json 中各 MCP 条目的 timeout 字段一致
+$ModelexMcpTimeoutMs = 1000000
 
 function Escape-TomlSingleQuoted([string]$s) {
     if ($null -eq $s) { return "" }
@@ -37,7 +59,25 @@ function Remove-McpServersTomlBlock([string]$text, [string]$serverKey) {
     return ($out -join [Environment]::NewLine)
 }
 
-function Write-CodexSysplorerMcpToml([string]$configPath, [string]$command, [string[]]$mcpArgs) {
+function Remove-LegacyMcpKeys([PSCustomObject]$block) {
+    if ($null -eq $block) { return }
+    foreach ($key in $LegacyMcpKeys) {
+        if ($block.PSObject.Properties.Name -contains $key) {
+            $block.PSObject.Properties.Remove($key)
+        }
+    }
+}
+
+function Remove-AllMcpServersTomlBlocks([string]$text, [string]$serverKey) {
+    $body = $text
+    do {
+        $prev = $body
+        $body = Remove-McpServersTomlBlock $body $serverKey
+    } while ($prev -ne $body)
+    return $body
+}
+
+function Write-CodexSysplorerToml([string]$configPath, [string]$command, [string[]]$mcpArgs) {
     $codexDir = Split-Path -Parent $configPath
     if (-not (Test-Path -LiteralPath $codexDir)) {
         New-Item -ItemType Directory -Path $codexDir -Force | Out-Null
@@ -46,10 +86,11 @@ function Write-CodexSysplorerMcpToml([string]$configPath, [string]$command, [str
     if (Test-Path -LiteralPath $configPath) {
         $body = [System.IO.File]::ReadAllText($configPath, [System.Text.UTF8Encoding]::new($false))
     }
-    $body = Remove-McpServersTomlBlock $body "sysplorer_mcp"
-    $body = Remove-McpServersTomlBlock $body "mworks_mcp"
+    foreach ($key in ($LegacyMcpKeys + @($McpClientKey))) {
+        $body = Remove-AllMcpServersTomlBlocks $body $key
+    }
     $sb = New-Object System.Text.StringBuilder
-    [void]$sb.AppendLine("[mcp_servers.sysplorer_mcp]")
+    [void]$sb.AppendLine("[mcp_servers.$McpClientKey]")
     [void]$sb.AppendLine(("command = '{0}'" -f (Escape-TomlSingleQuoted $command)))
     [void]$sb.AppendLine("args = [")
     foreach ($a in $mcpArgs) {
@@ -78,6 +119,39 @@ function Backup-ConfigFileIfExists([string]$path) {
     Write-Host "[OK] Backed up: $path -> $backupPath" -ForegroundColor DarkGray
 }
 
+function Read-JsonConfigRoot([string]$path) {
+    if (-not (Test-Path -LiteralPath $path)) {
+        return [PSCustomObject]@{}
+    }
+    $raw = [System.IO.File]::ReadAllText($path, [System.Text.UTF8Encoding]::new($false))
+    if ([string]::IsNullOrWhiteSpace($raw)) {
+        return [PSCustomObject]@{}
+    }
+    try {
+        $obj = $raw | ConvertFrom-Json
+    } catch {
+        Write-Warning ("Could not parse JSON config {0}: {1}" -f $path, $_)
+        return [PSCustomObject]@{}
+    }
+    if ($null -eq $obj -or $obj -isnot [System.Management.Automation.PSCustomObject]) {
+        return [PSCustomObject]@{}
+    }
+    return $obj
+}
+
+function Ensure-ConfigNestedObject([PSCustomObject]$config, [string]$name) {
+    $val = $config.$name
+    if ($null -eq $val -or $val -isnot [System.Management.Automation.PSCustomObject]) {
+        if ($config.PSObject.Properties.Name -contains $name) {
+            $config.PSObject.Properties.Remove($name)
+        }
+        $nested = [PSCustomObject]@{}
+        $config | Add-Member -MemberType NoteProperty -Name $name -Value $nested -Force
+        return $nested
+    }
+    return $val
+}
+
 # $true = pip list 中含名为 mcp 的包；$false = 已找到 python 但列表中无 mcp；$null = 未找到解释器或 pip list 失败
 function Test-SysplorerPythonPipListContainsMcp([string]$MworksInstallDir) {
     $py = Join-Path $MworksInstallDir "External\python64\python.exe"
@@ -97,7 +171,7 @@ function Test-SysplorerPythonPipListContainsMcp([string]$MworksInstallDir) {
 
 function Write-SysplorerMcpPipCheckResult([string]$MworksInstallDir) {
     $py = Join-Path $MworksInstallDir "External\python64\python.exe"
-    Write-Host "`n4. 正在检查 Sysplorer 自带 Python（pip list）中是否包含 mcp..." -ForegroundColor Yellow
+    Write-Host "`n5. 正在检查 Sysplorer 自带 Python（pip list）中是否包含 mcp..." -ForegroundColor Yellow
     $mcpOk = Test-SysplorerPythonPipListContainsMcp -MworksInstallDir $MworksInstallDir
     if ($mcpOk -eq $true) {
         Write-Host "[OK] pip list 中已检测到 mcp 包。" -ForegroundColor Green
@@ -135,19 +209,19 @@ if (-not (Test-Path -LiteralPath $mainPy)) {
     Write-Host "Expected at: $mainPy" -ForegroundColor Red
     Write-Host "Bundle root: $scriptDir (place main.py, sysplorer-mcp-server/, resources/ here; path is not derived from Sysplorer install dir)." -ForegroundColor Yellow
     Write-Host "Run install/build_publish.ps1 to populate publish/sysplorer_mcp, then copy that folder anywhere you like." -ForegroundColor Yellow
-    Read-Host "Press Enter to exit"
+    if (-not $silentInstall) { Read-Host "Press Enter to exit" }
     exit 1
 }
 if (-not (Test-Path -LiteralPath $pkgDir)) {
     Write-Host "Error: sysplorer-mcp-server folder not found next to this script." -ForegroundColor Red
     Write-Host "Expected at: $pkgDir" -ForegroundColor Red
-    Read-Host "Press Enter to exit"
+    if (-not $silentInstall) { Read-Host "Press Enter to exit" }
     exit 1
 }
 if (-not (Test-Path -LiteralPath $resDir)) {
     Write-Host "Error: resources folder not found next to this script." -ForegroundColor Red
     Write-Host "Expected at: $resDir" -ForegroundColor Red
-    Read-Host "Press Enter to exit"
+    if (-not $silentInstall) { Read-Host "Press Enter to exit" }
     exit 1
 }
 
@@ -182,6 +256,8 @@ Write-Host "Bundle root (from this script): $scriptDir" -ForegroundColor Gray
 Write-Host "main.py (written to MCP config):  $mainPyFull`n" -ForegroundColor Gray
 
 $defaultMworksDir = "C:\Program Files\MWORKS\Sysplorer 2026a"
+$defaultPlatformLabel = "Sysplorer 2026b"
+
 $mworksDir = $MworksInstallDir
 if ([string]::IsNullOrWhiteSpace($mworksDir)) {
     $mworksDir = Read-Host "Enter Sysplorer installation path (default: $defaultMworksDir)"
@@ -192,9 +268,13 @@ if ([string]::IsNullOrWhiteSpace($mworksDir)) {
 
 if (-not (Test-Path -LiteralPath $mworksDir)) {
     Write-Warning "Warning: The specified path $mworksDir does not exist, please confirm if it is correct"
-    $continue = Read-Host "Continue? (Y/N, default Y)"
-    if ($continue -eq "N" -or $continue -eq "n") {
-        exit 0
+    if ($silentInstall) {
+        Write-Host "[INFO] Silent install: continuing despite missing Sysplorer path." -ForegroundColor DarkGray
+    } else {
+        $continue = Read-Host "Continue? (Y/N, default Y)"
+        if ($continue -eq "N" -or $continue -eq "n") {
+            exit 0
+        }
     }
 }
 
@@ -202,12 +282,14 @@ $pythonExe = Join-Path $mworksDir "External\python64\python.exe"
 if (-not (Test-Path -LiteralPath $pythonExe)) {
     Write-Host "Error: Sysplorer bundled Python not found." -ForegroundColor Red
     Write-Host "Expected at: $pythonExe" -ForegroundColor Red
-    Read-Host "Press Enter to exit"
+    if (-not $silentInstall) { Read-Host "Press Enter to exit" }
     exit 1
 }
 
-$defaultPlatformLabel = "Sysplorer 2026a"
-$platformLabel = Read-Host "Enter Sysplorer platform label (default: $defaultPlatformLabel)"
+$platformLabel = $SysplorerPlatformLabel
+if ([string]::IsNullOrWhiteSpace($platformLabel)) {
+    $platformLabel = Read-Host "Enter Sysplorer platform label (default: $defaultPlatformLabel)"
+}
 if ([string]::IsNullOrWhiteSpace($platformLabel)) {
     $platformLabel = $defaultPlatformLabel
 }
@@ -222,33 +304,24 @@ $opencodeConfigDir = Join-Path $env:USERPROFILE ".config\opencode"
 $opencodeConfigPath = Join-Path $opencodeConfigDir "opencode.json"
 $codexHome = if (-not [string]::IsNullOrWhiteSpace($env:HOME)) { $env:HOME } elseif (-not [string]::IsNullOrWhiteSpace($env:USERPROFILE)) { $env:USERPROFILE } else { (Resolve-Path ~).Path }
 $codexConfigPath = Join-Path (Join-Path $codexHome ".codex") "config.toml"
+$modelexConfigDir = Join-Path $env:USERPROFILE ".modelex"
+$modelexConfigPath = Join-Path $modelexConfigDir "mcp.json"
 
 Write-Host "0. Backing up existing configuration files (if any)..." -ForegroundColor Yellow
 Backup-ConfigFileIfExists $claudeConfigPath
 Backup-ConfigFileIfExists $opencodeConfigPath
 Backup-ConfigFileIfExists $codexConfigPath
+Backup-ConfigFileIfExists $modelexConfigPath
 Write-Host ""
 
 # 1. Configure Claude (.claude.json)
 Write-Host "1. Configuring Claude..." -ForegroundColor Yellow
 
-if (Test-Path -LiteralPath $claudeConfigPath) {
-    $rawClaude = [System.IO.File]::ReadAllText($claudeConfigPath, [System.Text.UTF8Encoding]::new($false))
-    $claudeConfig = $rawClaude | ConvertFrom-Json
-} else {
-    $claudeConfig = [PSCustomObject]@{}
-}
+$claudeConfig = Read-JsonConfigRoot $claudeConfigPath
+$ms = Ensure-ConfigNestedObject $claudeConfig "mcpServers"
+Remove-LegacyMcpKeys $ms
 
-if (-not $claudeConfig.mcpServers) {
-    $claudeConfig | Add-Member -MemberType NoteProperty -Name "mcpServers" -Value ([PSCustomObject]@{}) -Force
-}
-
-$ms = $claudeConfig.mcpServers
-if ($ms -and ($ms.PSObject.Properties.Name -contains 'mworks_mcp')) {
-    $ms.PSObject.Properties.Remove('mworks_mcp')
-}
-
-$claudeConfig.mcpServers | Add-Member -MemberType NoteProperty -Name "sysplorer_mcp" -Value ([PSCustomObject]@{
+$claudeConfig.mcpServers | Add-Member -MemberType NoteProperty -Name $McpClientKey -Value ([PSCustomObject]@{
     command = $pythonExe
     args = @(
         $mainPyFull,
@@ -269,23 +342,11 @@ if (-not (Test-Path -LiteralPath $opencodeConfigDir)) {
     New-Item -ItemType Directory -Path $opencodeConfigDir -Force | Out-Null
 }
 
-if (Test-Path -LiteralPath $opencodeConfigPath) {
-    $rawOpen = [System.IO.File]::ReadAllText($opencodeConfigPath, [System.Text.UTF8Encoding]::new($false))
-    $opencodeConfig = $rawOpen | ConvertFrom-Json
-} else {
-    $opencodeConfig = [PSCustomObject]@{}
-}
+$opencodeConfig = Read-JsonConfigRoot $opencodeConfigPath
+$mcpBlock = Ensure-ConfigNestedObject $opencodeConfig "mcp"
+Remove-LegacyMcpKeys $mcpBlock
 
-if (-not $opencodeConfig.mcp) {
-    $opencodeConfig | Add-Member -MemberType NoteProperty -Name "mcp" -Value ([PSCustomObject]@{}) -Force
-}
-
-$mcpBlock = $opencodeConfig.mcp
-if ($mcpBlock -and ($mcpBlock.PSObject.Properties.Name -contains 'mworks_mcp')) {
-    $mcpBlock.PSObject.Properties.Remove('mworks_mcp')
-}
-
-$opencodeConfig.mcp | Add-Member -MemberType NoteProperty -Name "sysplorer_mcp" -Value ([PSCustomObject]@{
+$opencodeConfig.mcp | Add-Member -MemberType NoteProperty -Name $McpClientKey -Value ([PSCustomObject]@{
     type = "local"
     command = @(
         $pythonExe,
@@ -293,6 +354,7 @@ $opencodeConfig.mcp | Add-Member -MemberType NoteProperty -Name "sysplorer_mcp" 
         "--mworks-install-dir", $mworksDir,
         "--sysplorer-platform-label", $platformLabel
     )
+    timeout = $OpenCodeMcpTimeoutMs
 }) -Force
 
 $jsonContent = $opencodeConfig | ConvertTo-Json -Depth 10
@@ -302,17 +364,64 @@ Write-Host "[OK] OpenCode configuration updated: $opencodeConfigPath" -Foregroun
 
 # 3. Configure Codex CLI (~/.codex/config.toml)
 Write-Host "`n3. Configuring Codex CLI..." -ForegroundColor Yellow
-Write-CodexSysplorerMcpToml -configPath $codexConfigPath -command $pythonExe -mcpArgs @(
+Write-CodexSysplorerToml -configPath $codexConfigPath -command $pythonExe -mcpArgs @(
     $mainPyFull,
     "--mworks-install-dir", $mworksDir,
     "--sysplorer-platform-label", $platformLabel
 )
 Write-Host "[OK] Codex configuration updated: $codexConfigPath" -ForegroundColor Green
 
+# 4. Configure Modelex (~/.modelex/mcp.json)
+Write-Host "`n4. Configuring Modelex..." -ForegroundColor Yellow
+
+if (-not (Test-Path -LiteralPath $modelexConfigDir)) {
+    New-Item -ItemType Directory -Path $modelexConfigDir -Force | Out-Null
+}
+
+$modelexConfig = Read-JsonConfigRoot $modelexConfigPath
+$serversBlock = Ensure-ConfigNestedObject $modelexConfig "servers"
+Remove-LegacyMcpKeys $serversBlock
+
+$modelexConfig.servers | Add-Member -MemberType NoteProperty -Name $McpClientKey -Value ([PSCustomObject]@{
+    type = "local"
+    enabled = $true
+    command = @(
+        $pythonExe,
+        $mainPyFull,
+        "--mworks-install-dir", $mworksDir,
+        "--sysplorer-platform-label", $platformLabel
+    )
+    timeout = $ModelexMcpTimeoutMs
+}) -Force
+
+$jsonContent = $modelexConfig | ConvertTo-Json -Depth 10
+$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+[System.IO.File]::WriteAllText($modelexConfigPath, $jsonContent, $utf8NoBom)
+Write-Host "[OK] Modelex configuration updated: $modelexConfigPath" -ForegroundColor Green
+
 Write-SysplorerMcpPipCheckResult -MworksInstallDir $mworksDir
 
+$silentPy = Join-Path $scriptDir "install_mcp_silent.py"
+if (-not (Test-Path -LiteralPath $silentPy)) {
+    $silentPy = Join-Path $scriptDir "install\install_mcp_silent.py"
+}
+if ($env:NO_SYNC_OPENCODE_SKILLS -eq "1") {
+    Write-Host "`n[INFO] Skipping OpenCode skills sync (NO_SYNC_OPENCODE_SKILLS=1)." -ForegroundColor DarkGray
+} elseif (Test-Path -LiteralPath $silentPy) {
+    Write-Host "`nSyncing bundled modeling_skills to OpenCode and Modelex global skills directories ..." -ForegroundColor Yellow
+    try {
+        & $pythonExe $silentPy --sync-opencode-skills --bundle-root $scriptDir
+    } catch {
+        Write-Warning "OpenCode skills sync failed: $_"
+    }
+} else {
+    Write-Warning "install_mcp_silent.py not found (expected next to this script or under install\); skipped OpenCode skills sync."
+}
+
 Write-Host "`nConfiguration completed." -ForegroundColor Cyan
-Write-Host "Please restart Claude Code / OpenCode / Codex CLI to load the new MCP configuration." -ForegroundColor Gray
+Write-Host "Please restart Claude Code / OpenCode / Codex CLI / Modelex to load the new MCP configuration." -ForegroundColor Gray
 Write-Host "Other Python deps (fastmcp, anyio, ...) may still be required in Sysplorer's site-packages; use the same python.exe -m pip if needed." -ForegroundColor Gray
-Write-Host "To uninstall, remove the sysplorer_mcp entry from the corresponding configuration file." -ForegroundColor Gray
-Read-Host "Press Enter to close"
+Write-Host "To uninstall, remove the sysplorer entry from the corresponding configuration file." -ForegroundColor Gray
+if (-not $silentInstall) {
+    Read-Host "Press Enter to close"
+}

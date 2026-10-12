@@ -1,0 +1,9 @@
+{
+  "英文名": "ty-sysplorer-debugging",
+  "中文名": "Sysplorer 调试总入口",
+  "版本号": "1.1.0",
+  "中文功能定位": "独立识别和协调已有模型未知、混合或产品级故障；已知故障域可直接进入专业调试，不重复修复循环。",
+  "英文功能定位": "Independently route diagnosis or repair of existing Sysplorer model failures when the fault domain is unknown, mixed, or product-wide. Confirmed Modelica faults use ty-physical-model-debugging directly; confirmed Sysblock or CCaller faults use ty-sysblock-model-debugging directly. Exclude ordinary construction, editing, layout, tuning, and pure API help.",
+  "中文分类": "建模范式与路径路由",
+  "英文分类": "Modeling Path Router"
+}

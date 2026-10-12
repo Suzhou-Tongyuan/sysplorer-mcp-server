@@ -17,6 +17,7 @@ import threading
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from launch_context import sanitize_sysplorer_child_env
 from path_config import SYSPLORER_PYTHON, resolve_sysplorer_python_path
 
 _WORKER_SCRIPT = Path(__file__).resolve().parent / "sysplorer_worker_main.py"
@@ -127,10 +128,35 @@ def _merged_path_for_sysplorer(bin64_path: Path) -> str:
 
 
 def build_sysplorer_child_environ(bin64: Path, site_packages: Path, workdir: Path) -> Dict[str, str]:
-    env = os.environ.copy()
+    """Build env for Sysplorer bundled python / worker.
+
+    Prefer 8.3 short paths for *existing* dirs on Windows so native/VC toolchains that
+    still use narrow or ACP code pages do not corrupt Unicode in ``MWORKS_*`` paths.
+    """
+    from mworks_driver import _windows_short_path_if_exists
+
+    env = sanitize_sysplorer_child_env()
     env["MWORKS_BIN64"] = str(bin64)
     env["MWORKS_SYSPLORER_SITE_PACKAGES"] = str(site_packages)
-    env["MWORKS_WORKDIR"] = str(workdir)
+    wd = workdir
+    try:
+        wd = wd.resolve()
+        wd.mkdir(parents=True, exist_ok=True)
+        wd = _windows_short_path_if_exists(wd)
+    except OSError:
+        pass
+    env["MWORKS_WORKDIR"] = str(wd)
+    # 与仿真/翻译缓存常落在「文档\MWORKS\…」下；若已存在则改为短路径，减轻 cl 侧路径乱码。
+    for key in ("MWORKS_SIM_DIR", "MWORKS_MW_MOL_DIR", "MCP_WORKSPACE_DIR", "MCP_USER_WORKSPACE_DIR"):
+        raw = (env.get(key) or "").strip()
+        if not raw:
+            continue
+        try:
+            p = Path(raw).expanduser().resolve()
+            if p.exists():
+                env[key] = str(_windows_short_path_if_exists(p))
+        except OSError:
+            continue
     env["PATH"] = _merged_path_for_sysplorer(bin64)
     return env
 
@@ -437,8 +463,8 @@ class SysplorerSubprocessWorker:
         if timeout_sec is None:
             timeout_sec = self._call_timeout
         payload = _payload_for_worker_wire(payload)
-        # ensure_ascii=True avoids rare decode/escape issues; paths normalized to / on Windows above.
-        line_in = json.dumps(payload, ensure_ascii=True, default=str, separators=(",", ":")) + "\n"
+        # UTF-8 管道：用非 ASCII 字面 JSON，避免 \\uXXXX 与宿主侧编码混用时的歧义。
+        line_in = json.dumps(payload, ensure_ascii=False, default=str, separators=(",", ":")) + "\n"
         proc.stdin.write(line_in)
         proc.stdin.flush()
         # Sysplorer may print progress text (e.g. "正在连接...") to stdout before NDJSON.

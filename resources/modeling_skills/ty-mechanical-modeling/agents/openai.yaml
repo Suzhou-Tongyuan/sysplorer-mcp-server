@@ -1,0 +1,7 @@
+interface:
+  display_name: "TY 机械系统建模"
+  short_description: "父级已选 TY 商业机械组件后使用；支持上下文选择及标准库功能不足时的组合选库"
+  default_prompt: "先应用 ty-sysplorer-modeling-rules；当用户、有效上下文、已有模型或父级功能缺口判断已选定 TY 商业机械组件时，使用 $ty-mechanical-modeling。无需本轮重复库名；纯标准库实现留在父级。仅处理负责的机械子系统，保留已选标准库及跨域组件，固定 Modelica 4.0.0.TY.1。按请求验证，正式报告按需，结构化图面证据与图片条件继承父级 Gate 6。已有故障由父级调试路线主导，不重新开始建模。"
+
+policy:
+  allow_implicit_invocation: true

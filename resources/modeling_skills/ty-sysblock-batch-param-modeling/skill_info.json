@@ -1,0 +1,9 @@
+{
+  "英文名": "ty-sysblock-batch-param-modeling",
+  "中文名": "Sysblock 批量参数对象配置",
+  "版本号": "1.5.0",
+  "中文功能定位": "指导模块整组参数对象读取、局部字段查看与整体回写",
+  "英文功能定位": "Guide whole-component parameter object retrieval and write-back via batch APIs",
+  "中文分类": "Sysblock框图模型建模与调试",
+  "英文分类": "Sysblock Diagram Modeling & Debugging"
+}

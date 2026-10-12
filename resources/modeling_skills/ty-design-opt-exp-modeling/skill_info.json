@@ -1,0 +1,9 @@
+{
+  "name": "ty-design-opt-exp-modeling",
+  "display_name": "DesignOptExp 批量仿真",
+  "version": "1.1.0",
+  "description": "指导 Sysplorer DesignOptExp 批量仿真 Python API 的使用，包括初始化批量仿真、求解器目录、参数批量扫描、结果变量选择、结果读取，以及仿真结束后主动询问用户使用 matplotlib 绘制结果图。",
+  "description_en": "Guide Sysplorer DesignOptExp batch simulation Python API usage, including initialization, solver directories, parameter sweeps, result variable selection, result extraction, and proactively asking the user to plot results with matplotlib after simulation.",
+  "category": "设计优化 / 批量仿真",
+  "category_en": "Design Optimization / Batch Simulation"
+}

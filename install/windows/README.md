@@ -17,7 +17,7 @@
 
 当需要手动安装 sysplorer mcp 服务时，可以通过“<Sysplorer安装目录>/Tools/sysplorer_mcp”内的 “install_mcp.ps1” 一键安装 Windows Sysplorer MCP Server、“install_mcp.sh” 一键安装 Linux Sysplorer MCP Server。
 
-下文以 Windows 为例：
+下文以 Windows 为例。若发布包部署到 Linux，请在包根目录执行 `bash ./install_mcp.sh`；仓库内的完整 Linux 打包与验证说明见 `install/linux/README.md`。
 1. 在 “<Sysplorer安装目录>/Tools/sysplorer_mcp” 内右键 “install_mcp.ps1”安装脚本选择“通过 PowerShell 运行”或在当前目录启动 PowserShell 后执行执行如下命令：
 
 ```powershell
@@ -29,7 +29,7 @@
 | 项 | 含义 | 典型示例 |
 |----|------|----------|
 | **Sysplorer 安装路径** | 写入各客户端配置，并作为 MCP 进程参数 `--mworks-install-dir` | `C:\Program Files\MWORKS\Sysplorer 2026a` |
-| **Sysplorer 平台标签** | 参数 `--sysplorer-platform-label`，用于标识平台/版本展示 | `Sysplorer 2026a` |
+| **Sysplorer 平台标签** | 参数 `--sysplorer-platform-label`，用于标识平台/版本展示 | `Sysplorer 2026b` |
 
 脚本会校验路径下是否存在 **`External\python64\python.exe`**；MCP 实际由该解释器执行本目录中的 **`main.py`** 启动。
 
@@ -45,27 +45,32 @@ Python 与依赖环境说明
 
 - 在 **PowerShell** 中切勿仅输入 `"...\python.exe" -m pip ...`（会被解析为字符串而非启动程序），必须使用 **`& "路径\python.exe" -m pip ...`**。
 
-3. 脚本会自动将 MCP 配置添加到 Claude、OpenCode、Codex 的配置文件中
-4. 重启 Claude Code / OpenCode / Codex 客户端即可使用
+3. 脚本会自动将 MCP 配置添加到 Claude、OpenCode、Codex 的配置文件中  
+4. 脚本还会将本包内的 **`resources/modeling_skills`** 同步到 OpenCode 全局技能目录 **`%USERPROFILE%\.config\opencode\skills\`** 与 Modelex 全局技能目录 **`%USERPROFILE%\.modelex\skills\`**（每个技能为一级子目录，内含 `SKILL.md`）。同步时**仅按随包白名单**删除同名旧目录后整包复制，**不会**清空整个 `skills` 根目录。若需跳过，安装前设置环境变量 **`NO_SYNC_OPENCODE_SKILLS=1`**；静默安装可使用 **`python install/install_mcp_silent.py ... --no-sync-opencode-skills`**。  
+5. 重启 Claude Code / OpenCode / Codex 客户端即可使用
 
 如果一键部署脚本运行失败，也可以手动配置。
 
 #### Claude Code（JSON）
 
 - **文件**：`%USERPROFILE%\.claude.json`  
-- **节点**：`mcpServers.sysplorer_mcp`  
+- **节点**：`mcpServers.sysplorer`  
 - **本包（Python 布局）典型形态**：  
   - `command`：`Sysplorer` 的 `External\python64\python.exe` 绝对路径  
   - `args`：`["<本包main.py绝对路径>", "--mworks-install-dir", "<Sysplorer根目录>", "--sysplorer-platform-label", "<标签>"]`
 
 #### OpenCode（JSON）
 - **文件**：`%USERPROFILE%\.config\opencode\opencode.json`  
-- **节点**：`mcp.sysplorer_mcp`  
+- **节点**：`mcp.sysplorer`  
 - **字段**：`type` 一般为 `local`；`command` 为数组，首元素为 `python.exe`，其后为 `main.py` 路径及与上相同的参数。
 
 #### Codex（TOML）
 - **文件**：`%USERPROFILE%\.codex\config.toml`  
-- **节名**：`[mcp_servers.sysplorer_mcp]`  
+- **节名**：`[mcp_servers.sysplorer]`
+
+#### Modelex（JSON）
+- **文件**：`%USERPROFILE%\.modelex\mcp.json`
+- **节点**：`servers.sysplorer`  
 - **字段**：`command` 指向 `python.exe`；`args` 为多行字符串数组，内容顺序与 Claude 侧 `args` 一致。
 
 ## MCP Tools
@@ -165,7 +170,7 @@ Sysplorer MCP Server 共提供 13 个工具，覆盖 Sysplorer 的启动、建�
     <tr>
       <td><code>call_code</code></td>
       <td>脚本调用工具</td>
-      <td>用于执行 <code>run_script</code>、异步任务、就绪分派和 CAD 工具箱等能力，其中 <code>mode=&quot;run_script&quot;</code> 是 Sysblock 程序化建图和脚本化操作的重要入口。</td>
+      <td>用于执行 <code>run_sysplorer_api</code>、异步任务、就绪分派和 CAD 工具箱等能力，其中 <code>mode=&quot;run_sysplorer_api&quot;</code> 是 Sysblock 程序化建图和脚本化操作的重要入口。</td>
     </tr>
   </tbody>
 </table>

@@ -1,6 +1,6 @@
 """MCP 服务端版本。
 
-- **手工配置**：与仓库 ``install/package_version.json`` 中的 ``version_base``（如 ``0.1``）保持一致。
+- **手工配置**：与仓库 ``install/package_version.json`` 中的 ``version_base``（如 ``0.5``）保持一致。
 - **打包元数据**：由 ``install/write_build_meta.py`` 生成 ``_build_meta.py``（含 ``VERSION_BASE``、``BUILD_COUNTER`` 等）。
 - **内部版**：完整版本为 ``{VERSION_BASE}.{BUILD_COUNTER}``，其中 ``BUILD_COUNTER`` 为打包时 ``git rev-list --count HEAD``。
 - **发布版**：仅 ``VERSION_BASE``（``BUILD_COUNTER`` 为 0）；开发态无 ``_build_meta`` 时展示 ``VERSION_BASE`` 默认值。
@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import Any, Dict
 
 # 与 install/package_version.json 的 version_base 保持一致（无 _build_meta 时的回退）
-VERSION_BASE = "0.1"
+VERSION_BASE = "0.5"
 VERSION_CORE = VERSION_BASE  # 历史字段，等价于 version_base
 
 try:

@@ -28,28 +28,74 @@ for _dirpath, _dirnames, filenames in os.walk(_tools_root):
 
 # Collect all mcp package dependencies
 mcp_datas, mcp_binaries, mcp_hiddenimports = collect_all('mcp')
+zstandard_datas, zstandard_binaries, zstandard_hiddenimports = collect_all('zstandard')
 
 # Add pywin32 dependencies for Windows
 pywin32_datas, pywin32_binaries, pywin32_hiddenimports = collect_all('win32')
 pywin32comext_datas, pywin32comext_binaries, pywin32comext_hiddenimports = collect_all('win32comext')
 
-# Add mworks-sysplorer dependencies
+# Add mworks-sysplorer dependencies (package is mworks.sysplorer — there is no top-level "sysplorer")
 mworks_datas, mworks_binaries, mworks_hiddenimports = collect_all('mworks')
-sysplorer_datas, sysplorer_binaries, sysplorer_hiddenimports = collect_all('sysplorer')
 mworks_sysplorer_datas, mworks_sysplorer_binaries, mworks_sysplorer_hiddenimports = collect_all('mworks.sysplorer')
+
+# Align with Tools/sysplorer_python_api/offline_install.txt base deps.
+# websocket/jsonrpcclient/psutil are often lazy; colorama is top-level in sysplorer_api.
+websocket_datas, websocket_binaries, websocket_hiddenimports = collect_all('websocket')
+colorama_datas, colorama_binaries, colorama_hiddenimports = collect_all('colorama')
+jsonrpcclient_datas, jsonrpcclient_binaries, jsonrpcclient_hiddenimports = collect_all('jsonrpcclient')
+psutil_datas, psutil_binaries, psutil_hiddenimports = collect_all('psutil')
+packaging_datas, packaging_binaries, packaging_hiddenimports = collect_all('packaging')
+
+_api_binaries = (
+    websocket_binaries + colorama_binaries + jsonrpcclient_binaries
+    + psutil_binaries + packaging_binaries
+)
+_api_datas = (
+    websocket_datas + colorama_datas + jsonrpcclient_datas
+    + psutil_datas + packaging_datas
+)
+_api_hiddenimports = (
+    [
+        'websocket', 'colorama', 'jsonrpcclient', 'psutil', 'packaging',
+    ]
+    + websocket_hiddenimports + colorama_hiddenimports + jsonrpcclient_hiddenimports
+    + psutil_hiddenimports + packaging_hiddenimports
+)
 
 _mcp_root_py = [(p, '.') for p in glob.glob(os.path.join(_MCP_ROOT, '*.py'))]
 
 a = Analysis(
     [os.path.join(_MCP_ROOT, 'main.py')],
     pathex=[_REPO_ROOT, _MCP_ROOT],
-    binaries=mcp_binaries + pywin32_binaries + pywin32comext_binaries + mworks_binaries + sysplorer_binaries + mworks_sysplorer_binaries,
+    binaries=(
+        mcp_binaries + zstandard_binaries + pywin32_binaries + pywin32comext_binaries
+        + mworks_binaries + mworks_sysplorer_binaries
+        + _api_binaries
+    ),
     datas=[
         (os.path.join(_MCP_ROOT, 'core'), 'core'),
         *_tools_datas,
         *_mcp_root_py,
-    ] + mcp_datas + pywin32_datas + pywin32comext_datas + mworks_datas + sysplorer_datas + mworks_sysplorer_datas,
-    hiddenimports=['uuid', 'asyncio', 'concurrent.futures', 'json', 'html', 'http', 'urllib', 'datetime', 'typing', 'collections', 'functools', 'itertools', 're', 'subprocess', 'threading', 'multiprocessing', 'queue', 'time', 'math', 'random', 'hashlib', 'base64', 'struct', 'socket', 'ssl', 'tempfile', 'shutil', 'glob'] + mcp_hiddenimports + pywin32_hiddenimports + pywin32comext_hiddenimports + mworks_hiddenimports + sysplorer_hiddenimports + mworks_sysplorer_hiddenimports,
+    ] + (
+        mcp_datas + zstandard_datas + pywin32_datas + pywin32comext_datas
+        + mworks_datas + mworks_sysplorer_datas
+        + _api_datas
+    ),
+    hiddenimports=(
+        [
+            'uuid', 'asyncio', 'concurrent.futures', 'json', 'html', 'http', 'urllib',
+            'datetime', 'typing', 'collections', 'functools', 'itertools', 're',
+            'subprocess', 'threading', 'multiprocessing', 'queue', 'time', 'math',
+            'random', 'hashlib', 'base64', 'struct', 'socket', 'ssl', 'tempfile',
+            'shutil', 'glob', 'tarfile', 'zstandard',
+            # Frozen exe skips site.py; modelica_lite ModelingPy.Help needs pydoc.help.
+            'pydoc', 'pydoc_data', 'pydoc_data.topics',
+        ]
+        + _api_hiddenimports
+        + mcp_hiddenimports + zstandard_hiddenimports
+        + pywin32_hiddenimports + pywin32comext_hiddenimports
+        + mworks_hiddenimports + mworks_sysplorer_hiddenimports
+    ),
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

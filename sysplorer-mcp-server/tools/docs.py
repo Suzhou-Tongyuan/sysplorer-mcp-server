@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from typing import Any, Dict, List, Optional
 
-from mcp_instance import mcp
+from mcp_instance import mcp, readonly_annotations
 from path_config import (
     RAG_INDEX_PATH,
     effective_rag_lexical_only,
@@ -17,6 +17,8 @@ from core.metadata_index import _get_rag_module
 from core.resources_manifest import load_manifest, resolve_corpus_path
 from core.utils import (
     _json,
+    _rag_index_location_fields,
+    _resolve_rag_index_for_use,
     _resolve_rag_index_path,
     _resolve_rag_source_strings,
     _get_default_rag_sources,
@@ -76,7 +78,7 @@ def _docs_corpora(
         rp = resolve_corpus_path(entry, root)
         if want and entry.id != want:
             continue
-        d = entry.to_public_dict(rp)
+        d = entry.to_public_dict(rp, resources_root=root)
         if entry.default_index:
             default_ids.append(entry.id)
         corpora_out.append(d)
@@ -121,11 +123,30 @@ def _load_docs_index(
     max_files: int = 0,
     max_chunks: int = 0,
     lexical_only: bool = False,
-) -> tuple[Optional[Any], Optional[Any], Optional[str], Optional[List[str]], Optional[bool], Optional[str]]:
+) -> tuple[Optional[Any], Optional[Any], Optional[str], Optional[List[str]], Optional[bool], Optional[str], Dict[str, Any]]:
+    empty_meta: Dict[str, Any] = {}
     try:
         rag = _get_rag_module()
-        index_file = _resolve_rag_index_path(index_path)
-        index_file.parent.mkdir(parents=True, exist_ok=True)
+        preferred = index_path
+        preferred_file = _resolve_rag_index_path(preferred)
+        need_write = bool(rebuild_index) or (not preferred_file.is_file())
+        try:
+            index_file, path_meta = _resolve_rag_index_for_use(preferred, need_write=need_write)
+        except PermissionError as exc:
+            return None, None, None, None, None, _json(
+                {
+                    "ok": False,
+                    "tool": tool_name,
+                    "action": action,
+                    "error": str(exc),
+                    "hint": (
+                        "Set MCP_RAG_INDEX_PATH (or --rag-index-path) to a writable JSON file. "
+                        "The default resources/indexes/modelica_doc_index.json lives beside the "
+                        "deployed corpus and is often not writable; the index is not shipped."
+                    ),
+                    "index_path_preferred": str(preferred_file),
+                }
+            ), empty_meta
         eff_mc = effective_rag_max_chunks(max_chunks)
         eff_lex = effective_rag_lexical_only(lexical_only)
         mc_arg = eff_mc if eff_mc > 0 else None
@@ -144,11 +165,11 @@ def _load_docs_index(
                     ),
                     "manifest_path": str(get_resources_manifest_path()),
                 }
-            )
+            ), empty_meta
         except (ValueError, RuntimeError) as exc:
             return None, None, None, None, None, _json(
                 {"ok": False, "tool": tool_name, "action": action, "error": str(exc)}
-            )
+            ), empty_meta
 
         rag_extensions = (
             {x.strip().lower() for x in extensions_csv.split(",") if x.strip()}
@@ -173,7 +194,7 @@ def _load_docs_index(
                             "(MCP_RAG_MAX_CHUNKS / max_chunks, MCP_RAG_LEXICAL_ONLY), "
                             "or set MCP_RAG_MAX_INDEX_LOAD_MB=0 to disable this guard.",
                         }
-                    )
+                    ), empty_meta
             except OSError:
                 pass
 
@@ -195,11 +216,11 @@ def _load_docs_index(
             rebuilt = True
 
         index = rag.load_index(str(index_file))
-        return rag, index, str(index_file), rag_sources, rebuilt, None
+        return rag, index, str(index_file), rag_sources, rebuilt, None, path_meta
     except Exception as exc:
         return None, None, None, None, None, _json(
             {"ok": False, "tool": tool_name, "action": action, "error": str(exc)}
-        )
+        ), empty_meta
 
 
 def _docs_search(
@@ -228,7 +249,7 @@ def _docs_search(
     eff_mc = effective_rag_max_chunks(max_chunks)
     eff_lex = effective_rag_lexical_only(lexical_only)
 
-    rag, index, index_file, rag_sources, rebuilt, error = _load_docs_index(
+    rag, index, index_file, rag_sources, rebuilt, error, path_meta = _load_docs_index(
         tool_name=tool_name,
         action=action,
         index_path=index_path,
@@ -260,7 +281,7 @@ def _docs_search(
             "query": query_text,
             "top_k": max(1, int(top_k)),
             "path_contains": path_contains,
-            "index_path": index_file,
+            **_rag_index_location_fields(path_meta or {"used": index_file}),
             "sources_used": rag_sources,
             "index_rebuilt": rebuilt,
             "num_docs": int(index.get("num_docs", 0)),
@@ -287,7 +308,7 @@ def _docs_list(
     tool_name: str = RESOURCES_RETRIEVAL_TOOL,
     action: str = "list",
 ) -> str:
-    _rag, index, index_file, _rag_sources, _rebuilt, error = _load_docs_index(
+    _rag, index, index_file, _rag_sources, _rebuilt, error, path_meta = _load_docs_index(
         tool_name=tool_name,
         action=action,
         index_path=index_path,
@@ -312,7 +333,14 @@ def _docs_list(
         if len(out) >= max(1, int(limit)):
             break
     return _json(
-        {"ok": True, "tool": tool_name, "action": action, "total": len(out), "docs": out, "index_path": index_file}
+        {
+            "ok": True,
+            "tool": tool_name,
+            "action": action,
+            "total": len(out),
+            "docs": out,
+            **_rag_index_location_fields(path_meta or {"used": index_file}),
+        }
     )
 
 
@@ -365,7 +393,7 @@ def _docs_explain(
     )
 
 
-@mcp.tool()
+@mcp.tool(annotations=readonly_annotations(idempotent=True))
 def resources_retrieval(
     action: str,
     query: str = "",
@@ -388,7 +416,10 @@ def resources_retrieval(
     max_chunks: int = 0,
     lexical_only: bool = False,
 ) -> str:
-    """Unified Sysplorer resources retrieval: corpora | search | list | explain."""
+    """On-demand corpus lookup: ``corpora`` | ``search`` | ``list`` | ``explain``.
+
+    First ``search``/``list`` may build a local index (or workspace fallback).
+    """
     action_norm = (action or "").strip().lower()
     if action_norm == "corpora":
         return _docs_corpora(

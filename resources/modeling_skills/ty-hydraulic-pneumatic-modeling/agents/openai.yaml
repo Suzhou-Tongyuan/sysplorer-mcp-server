@@ -1,0 +1,7 @@
+interface:
+  display_name: "TY 液压/热液压/气动建模"
+  short_description: "父级已选 TY 流体组件后使用；支持上下文选择及标准库功能不足时的组合选库"
+  default_prompt: "先应用 ty-sysplorer-modeling-rules；用户、上下文、已有模型或父级标准库功能缺口判断已选定 TY 流体组件后使用 $ty-hydraulic-pneumatic-modeling，无需本轮重复库名。流体库范围仅约束负责的子系统，保留标准库与跨域组件；固定 Modelica 4.0.0.TY.1。按父级 Gate 1—7 处理范围、证据、构建、检查、验证设计、图面和交付，结果与正式报告按需。已有故障由父级调试路线主导。"
+
+policy:
+  allow_implicit_invocation: true

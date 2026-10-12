@@ -1,0 +1,9 @@
+{
+  "英文名": "ty-thermofluid-modeling",
+  "中文名": "TY 热流体建模",
+  "版本号": "1.1.3",
+  "中文功能定位": "在已应用 ty-sysplorer-modeling-rules 之后，于 TY 热流体商业库范围内执行热流体、换热、空气处理、通风、HVAC 与环境控制模型的新建、修复、验证与结果复核。用户明确指定商业库路径，或父规则/有效上下文已选定 TYMedia、TYThermoFluidSys、TYAirTreatmentAndVentilation 组件时使用；未指定库先评估标准库，功能不足时保留可用标准库并补充商业组件。本技能只约束负责的子系统，验证与文档按请求执行。",
+  "英文功能定位": "After ty-sysplorer-modeling-rules has been applied, build, repair, validate, and review thermo-fluid, heat-exchange, air-handling, ventilation, HVAC, and environmental-control models within TY commercial thermo-fluid libraries. Use when the user or parent context has selected TYMedia, TYThermoFluidSys, or TYAirTreatmentAndVentilation components; retain sufficient standard components and supplement documented gaps with commercial components. Scope the whitelist to the responsible subsystem and inherit requested validation depth.",
+  "中文分类": "Sysplorer 物理模型建模与调试",
+  "英文分类": "Sysplorer Physical Modeling & Debugging"
+}

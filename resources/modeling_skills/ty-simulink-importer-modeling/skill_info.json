@@ -1,0 +1,9 @@
+{
+  "name": "ty-simulink-importer-modeling",
+  "display_name": "SimulinkImporter Simulink模型导入",
+  "version": "1.0.0",
+  "description": "指导 Sysplorer SimulinkImporter Python API 的使用，包括启动/关闭导入工具、导入 Simulink .slx 模型为 Sysblock 模型、配置导出路径、Link 子系统库以及数据文件导入。",
+  "description_en": "Guide Sysplorer SimulinkImporter Python API usage, including starting/closing the importer, importing Simulink .slx models as Sysblock models, configuring export paths, Link subsystem libraries, and data file imports.",
+  "category": "模型导入 / Simulink 导入",
+  "category_en": "Model Import / Simulink Import"
+}

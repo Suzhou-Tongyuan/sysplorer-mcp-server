@@ -1,0 +1,7 @@
+{
+  "name": "ty-sysblock-diagram-modeling",
+  "display_name": "Sysblock Diagram Modeling",
+  "version": "1.3.1",
+  "purpose": "Use SysplorerEmbeddedCoder for Sysblock diagram modeling and simulation verification",
+  "category": "Sysblock Diagram Modeling and Debugging"
+}

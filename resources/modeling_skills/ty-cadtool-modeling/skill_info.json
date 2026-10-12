@@ -1,0 +1,9 @@
+{
+  "英文名": "ty-cadtool-modeling",
+  "中文名": "TY CAD 工具建模",
+  "版本号": "V1.3.0",
+  "中文功能定位": "经 Sysplorer MCP 调用 CAD 工具 Python API，把 STEP/IGES 等几何装配转换为 Modelica 多体或流体油箱模型，并完成检查、生成、仿真与校验。",
+  "英文功能定位": "Drive the CADToolbox Python API through Sysplorer MCP to convert STEP/IGES CAD assemblies into Modelica multibody (TYMultibody) or fluid tank models, then check, generate, simulate and validate.",
+  "中文分类": "Sysplorer 物理模型建模与调试",
+  "英文分类": "Sysplorer Physical Modeling & Debugging"
+}

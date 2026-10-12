@@ -5,8 +5,8 @@ All tool implementations live in:
   tools/docs.py           resources_retrieval (corpora/search/list/explain)
   tools/layout.py         Smart layout and system model generation tools
   tools/sysplorer.py      Sysplorer health / restart management tools
-  tools/workflow.py       call_code（统一 run_script / 异步任务 / 就绪分派 / fast_workflow）
-  tools/model_ops.py      Model load / check / translate / simulate（改参经 workflow run_with_ready，无独立工具）
+  tools/workflow.py       call_code（仅 run_sysplorer_api；旧 mode 失败并指向专用工具）
+  tools/model_ops.py      Model load / check / translate / simulate（改参走官方 SetModelParamValue）
   tools/results.py        Simulation result query and plot_manager tools
   tools/lib_docs.py     get_lib_model_document + get_api_document
 """
@@ -25,6 +25,7 @@ def _apply_mcp_env_from_argv() -> None:
     parser.add_argument("--sysplorer-platform-label", type=str, default=None)
     parser.add_argument("--resources-dir", type=str, default=None)
     parser.add_argument("--workspace-dir", type=str, default=None)
+    parser.add_argument("--user-workspace", type=str, default=None)
     parser.add_argument("--rag-index-path", type=str, default=None)
     args, _ = parser.parse_known_args()
     if args.mworks_install_dir:
@@ -35,6 +36,9 @@ def _apply_mcp_env_from_argv() -> None:
         os.environ["MCP_RESOURCES_DIR"] = args.resources_dir.strip()
     if args.workspace_dir:
         os.environ["MCP_WORKSPACE_DIR"] = args.workspace_dir.strip()
+    if args.user_workspace:
+        os.environ["MCP_USER_WORKSPACE_DIR"] = args.user_workspace.strip()
+        os.environ["MCP_DEPENDENCY_DOWNLOAD_ENABLED"] = "1"
     if args.rag_index_path:
         os.environ["MCP_RAG_INDEX_PATH"] = args.rag_index_path.strip()
 
@@ -42,7 +46,10 @@ def _apply_mcp_env_from_argv() -> None:
 # Must run before `import path_config`: that module binds MWORKS_BIN64 etc. at import time.
 _apply_mcp_env_from_argv()
 
-from path_config import resolve_mcp_server_log_dir
+from path_config import ensure_modelica_lite_site_helpers, resolve_mcp_server_log_dir
+
+# Frozen modelica-lite exe skips site.py; ModelingPy.Help needs builtins.help.
+ensure_modelica_lite_site_helpers()
 
 
 # ── Redirect stderr to log file ───────────────────────────────────────────────
@@ -72,7 +79,20 @@ logging.basicConfig(
     format="%(asctime)s %(name)s %(levelname)s %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
-# ─────────────────────────────────────────────────────────────────────────────
+logging.getLogger(__name__).warning(
+    "MCP bootstrap pid=%s ppid=%s exe=%s cwd=%s CHCP=%s PYTHONUTF8=%s PYTHONIOENCODING=%s "
+    "stdin_isatty=%s stdout_isatty=%s stderr_isatty=%s",
+    os.getpid(),
+    getattr(os, "getppid", lambda: -1)(),
+    sys.executable,
+    os.getcwd(),
+    os.environ.get("CHCP", "<unset>"),
+    os.environ.get("PYTHONUTF8", "<unset>"),
+    os.environ.get("PYTHONIOENCODING", "<unset>"),
+    getattr(sys.stdin, "isatty", lambda: False)(),
+    getattr(sys.stdout, "isatty", lambda: False)(),
+    getattr(sys.stderr, "isatty", lambda: False)(),
+)
 
 from mcp_instance import mcp, _FASTMCP_AVAILABLE  # noqa: E402
 
@@ -91,6 +111,10 @@ from tools.results import (  # noqa: E402, F401
 )
 from tools.model_ops import (  # noqa: E402, F401
     model_manager,
+    model_inspect,
+    compare_model,
+    load_library,
+    library_prepare,
     check_model,
     simulate_model,
     translate_model,
@@ -109,6 +133,11 @@ if __name__ == "__main__":
         "--rag-index-path",
         type=str,
         help="Absolute or exe-relative path to BM25 index JSON (sets MCP_RAG_INDEX_PATH)",
+    )
+    parser.add_argument(
+        "--user-workspace",
+        type=str,
+        help="User workspace that enables model dependency download/install flow (sets MCP_USER_WORKSPACE_DIR)",
     )
     parser.add_argument(
         "--workspace-dir",
@@ -132,6 +161,15 @@ if __name__ == "__main__":
 
     print(format_version_banner(), file=sys.stderr)
     print("Starting MWorks MCP Server...", file=sys.stderr)
+
+    # 可选：ACP 注入 SYSPLORE_MCP_HEARTBEAT_PORT 时在本进程内提供 loopback HTTP 健康检查（见 mcp_heartbeat_http）
+    from mcp_heartbeat_http import start_mcp_heartbeat_http
+
+    start_mcp_heartbeat_http()
+
+    from core.mcp_stdio_safety import install_late_response_guard
+
+    install_late_response_guard()
 
     import anyio
     from io import TextIOWrapper

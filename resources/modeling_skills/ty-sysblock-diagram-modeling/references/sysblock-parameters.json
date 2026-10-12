@@ -1,0 +1,1156 @@
+{
+  "SysplorerEmbeddedCoder.Continuous.Derivative": [
+    "CoeffcientInTFapproximation"
+  ],
+  "SysplorerEmbeddedCoder.Continuous.FirstOrderHold": [
+    "InitialOutput",
+    "OutputAlgorithm",
+    "ErrorTolerance",
+    "AllowContinuousInput"
+  ],
+  "SysplorerEmbeddedCoder.Continuous.Integrator": [
+    "ExternalResetType",
+    "InitCondSourceType",
+    "InitCond",
+    "LimitOutput",
+    "UpperSaturationLimit",
+    "LowerSaturationLimit",
+    "WrapState",
+    "UpperStateLimit",
+    "LowerStateLimit",
+    "ShowSaturationPort",
+    "ShowStatePort",
+    "AbsoluteTolerance",
+    "IgnoreLimit",
+    "ZeroCross"
+  ],
+  "SysplorerEmbeddedCoder.Continuous.IntegratorLimited": [
+    "ExternalResetType",
+    "InitCondSourceType",
+    "InitCond",
+    "LimitOutput",
+    "UpperSaturationLimit",
+    "LowerSaturationLimit",
+    "WrapState",
+    "UpperStateLimit",
+    "LowerStateLimit",
+    "ShowSaturationPort",
+    "ShowStatePort",
+    "AbsoluteTolerance",
+    "IgnoreLimit",
+    "ZeroCross"
+  ],
+  "SysplorerEmbeddedCoder.Continuous.PIDController": [
+    "Controller",
+    "Form",
+    "TimeDomain",
+    "SampleTimeEdit",
+    "IntegratorMethod",
+    "FilterMethod",
+    "ControllerParameterSource",
+    "P",
+    "I",
+    "D",
+    "N",
+    "UseFilter",
+    "InitialConditionSource",
+    "InitialConditionForIntegrator",
+    "InitialConditionForFilter",
+    "externalResetType",
+    "TrackingMode",
+    "Kt",
+    "LimitOutput",
+    "SatLimitsSource",
+    "UpperSaturationLimit",
+    "LowerSaturationLimit",
+    "AntiWindupMode",
+    "Kb",
+    "LimitIntegratorOutput",
+    "UpperIntegratorSaturationLimit",
+    "LowerIntegratorSaturationLimit"
+  ],
+  "SysplorerEmbeddedCoder.Continuous.SecondOrderIntegrator": [
+    "XInitCondSourceType",
+    "XInitCond",
+    "XLimit",
+    "XUpperLimit",
+    "XLowerLimit",
+    "XWrap",
+    "XUpperWrapLimit",
+    "XLowerWrapLimit",
+    "Edit_4",
+    "DXDTInitCondSourceType",
+    "DXDTInitCond",
+    "DXDTLimit",
+    "DXDTUpperLimit",
+    "DXDTLowerLimit",
+    "DXDTAbsoluteTolerance",
+    "ExternalResetType",
+    "ZeroCross",
+    "DXDTInit",
+    "ShowOutputType"
+  ],
+  "SysplorerEmbeddedCoder.Continuous.SecondOrderIntegratorLimited": [
+    "XInitCondSourceType",
+    "XInitCond",
+    "XLimit",
+    "XUpperLimit",
+    "XLowerLimit",
+    "XWrap",
+    "XUpperWrapLimit",
+    "XLowerWrapLimit",
+    "Edit_4",
+    "DXDTInitCondSourceType",
+    "DXDTInitCond",
+    "DXDTLimit",
+    "DXDTUpperLimit",
+    "DXDTLowerLimit",
+    "DXDTAbsoluteTolerance",
+    "ExternalResetType",
+    "ZeroCross",
+    "DXDTInit",
+    "ShowOutputType"
+  ],
+  "SysplorerEmbeddedCoder.Continuous.StateSpace": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "X0",
+    "AbsoluteTolerance"
+  ],
+  "SysplorerEmbeddedCoder.Continuous.TransferFcn": [
+    "Numerator",
+    "Denominator",
+    "AbsoluteTolerance"
+  ],
+  "SysplorerEmbeddedCoder.Continuous.TransportDelay": [
+    "timeDelay",
+    "initialOutput",
+    "initialBufferSize",
+    "useFixedBufferSize",
+    "padeOrder"
+  ],
+  "SysplorerEmbeddedCoder.Continuous.VariableTimeDelay": [
+    "selectDelayType",
+    "maxDelay",
+    "initialOutput",
+    "initialBufferSize",
+    "useFixedBufferSize",
+    "padeOrder"
+  ],
+  "SysplorerEmbeddedCoder.Continuous.VariableTransportDelay": [
+    "selectDelayType",
+    "maxDelay",
+    "initialOutput",
+    "initialBufferSize",
+    "useFixedBufferSize",
+    "padeOrder"
+  ],
+  "SysplorerEmbeddedCoder.Continuous.ZeroPole": [
+    "Zeros",
+    "Poles",
+    "Gain",
+    "AbsoluteTolerance"
+  ],
+  "SysplorerEmbeddedCoder.Discontinuities.Backlash": [
+    "BacklashWidth",
+    "InitialOutput",
+    "ZeroCross"
+  ],
+  "SysplorerEmbeddedCoder.Discontinuities.CoulombAndViscousFriction": [
+    "Offset",
+    "Gain"
+  ],
+  "SysplorerEmbeddedCoder.Discontinuities.DeadZone": [
+    "LowerValue",
+    "UpperValue",
+    "LinearizeAsGain",
+    "ZeroCross"
+  ],
+  "SysplorerEmbeddedCoder.Discontinuities.DeadZoneDynamic": [],
+  "SysplorerEmbeddedCoder.Discontinuities.HitCrossing": [
+    "HitCrossingOffset",
+    "HitCrossingDirection",
+    "OutputType",
+    "ZeroCross"
+  ],
+  "SysplorerEmbeddedCoder.Discontinuities.Quantizer": [
+    "QuantizationInterval",
+    "LinearizeAsGain"
+  ],
+  "SysplorerEmbeddedCoder.Discontinuities.RateLimiter": [
+    "RisingSlewLimit",
+    "FallingSlewLimit",
+    "InitialCondition",
+    "LinearizeAsGain"
+  ],
+  "SysplorerEmbeddedCoder.Discontinuities.RateLimiterDynamic": [],
+  "SysplorerEmbeddedCoder.Discontinuities.Relay": [
+    "OnSwitchValue",
+    "OffSwitchValue",
+    "OnOutputValue",
+    "OffOutputValue",
+    "ZeroCross",
+    "OutMin",
+    "OutMax",
+    "OutDataTypeStr"
+  ],
+  "SysplorerEmbeddedCoder.Discontinuities.Saturation": [
+    "UpperLimit",
+    "LowerLimit",
+    "LinearizeAsGain",
+    "ZeroCross",
+    "OutMin",
+    "OutMax",
+    "OutDataTypeStr"
+  ],
+  "SysplorerEmbeddedCoder.Discontinuities.SaturationDynamic": [
+    "OutMin",
+    "OutMax",
+    "OutDataTypeStr"
+  ],
+  "SysplorerEmbeddedCoder.Discontinuities.WrapToZero": [
+    "Threshold"
+  ],
+  "SysplorerEmbeddedCoder.Discrete.Delay": [
+    "DelayLengthSource",
+    "InitialConditionSource",
+    "DelayLength",
+    "InitialCondition",
+    "DelayLengthUpperLimit",
+    "ShowEnablePort",
+    "ExternalReset",
+    "SampleTime"
+  ],
+  "SysplorerEmbeddedCoder.Discrete.Difference": [
+    "ICPrevInput",
+    "OutMin",
+    "OutMax",
+    "OutDataTypeStr"
+  ],
+  "SysplorerEmbeddedCoder.Discrete.DiscreteDerivative": [
+    "gainVal",
+    "iCPrevInput",
+    "OutDataType"
+  ],
+  "SysplorerEmbeddedCoder.Discrete.DiscretePIDController": [
+    "Controller",
+    "Form",
+    "TimeDomain",
+    "SampleTimeEdit",
+    "IntegratorMethod",
+    "FilterMethod",
+    "ControllerParameterSource",
+    "P",
+    "I",
+    "D",
+    "N",
+    "UseFilter",
+    "InitialConditionSource",
+    "InitialConditionForIntegrator",
+    "InitialConditionForFilter",
+    "externalResetType",
+    "TrackingMode",
+    "Kt",
+    "LimitOutput",
+    "SatLimitsSource",
+    "UpperSaturationLimit",
+    "LowerSaturationLimit",
+    "AntiWindupMode",
+    "Kb",
+    "LimitIntegratorOutput",
+    "UpperIntegratorSaturationLimit",
+    "LowerIntegratorSaturationLimit"
+  ],
+  "SysplorerEmbeddedCoder.Discrete.DiscreteStateSpace": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "X0",
+    "SampleTime"
+  ],
+  "SysplorerEmbeddedCoder.Discrete.DiscreteTimeIntegrator": [
+    "IntegratorMethod",
+    "GainValue",
+    "ExternalReset",
+    "InitialConditionSource",
+    "InitialCondition",
+    "SampleTime",
+    "LimitOutput",
+    "UpperSaturationLimit",
+    "LowerSaturationLimit",
+    "ShowSaturationPort",
+    "ShowStatePort",
+    "IgnoreLimit",
+    "OutMin",
+    "OutMax",
+    "OutDataTypeStr"
+  ],
+  "SysplorerEmbeddedCoder.Discrete.DiscreteTransferFcn": [
+    "NumeratorSourceEdit",
+    "DenominatorSourceEdit",
+    "initStateSourceEdit",
+    "numeratorEdit",
+    "denominatorEdit",
+    "initStateEdit",
+    "ExternalReset",
+    "a0EqualsOne",
+    "SampleTime",
+    "OutMin",
+    "OutMax",
+    "OutDataTypeStr"
+  ],
+  "SysplorerEmbeddedCoder.Discrete.Memory": [
+    "InitialConditionEdit",
+    "Checkbox"
+  ],
+  "SysplorerEmbeddedCoder.Discrete.TappedDelay": [
+    "InitialCondition",
+    "SampleTime",
+    "NumDelays",
+    "DelayOrder",
+    "IncludeCurrent"
+  ],
+  "SysplorerEmbeddedCoder.Discrete.TransferFcnFirstOrder": [
+    "poleZ",
+    "prevOutput"
+  ],
+  "SysplorerEmbeddedCoder.Discrete.TransferFcnLeadorLeg": [
+    "poleZ",
+    "zeroZ",
+    "prevOutput",
+    "prevInput"
+  ],
+  "SysplorerEmbeddedCoder.Discrete.TransferFcnRealZero": [
+    "zeroZ",
+    "prevInput"
+  ],
+  "SysplorerEmbeddedCoder.Discrete.UnitDelay": [
+    "InitialCondition",
+    "SampleTime"
+  ],
+  "SysplorerEmbeddedCoder.Discrete.ZeroOrderHold": [
+    "SampleTime"
+  ],
+  "SysplorerEmbeddedCoder.FlipFlops.DFlipFlop": [],
+  "SysplorerEmbeddedCoder.FlipFlops.J_KFlipFlop": [
+    "InitCond"
+  ],
+  "SysplorerEmbeddedCoder.FlipFlops.S_RFlipFlop": [
+    "InitCond"
+  ],
+  "SysplorerEmbeddedCoder.LogicAndBitOperation.BitClear": [
+    "bitIndex"
+  ],
+  "SysplorerEmbeddedCoder.LogicAndBitOperation.BitSet": [
+    "bitIndex"
+  ],
+  "SysplorerEmbeddedCoder.LogicAndBitOperation.BitSlice": [
+    "MSBP",
+    "LSBP"
+  ],
+  "SysplorerEmbeddedCoder.LogicAndBitOperation.BitToIntegerConverter": [
+    "M",
+    "Order",
+    "Symbol",
+    "UnSignedDataType",
+    "SignedDataType"
+  ],
+  "SysplorerEmbeddedCoder.LogicAndBitOperation.BitwiseOperator": [
+    "LogicOperator",
+    "UseBitMask",
+    "NumInputPorts",
+    "BitMask"
+  ],
+  "SysplorerEmbeddedCoder.LogicAndBitOperation.CombinatorialLogic": [
+    "TruthTable"
+  ],
+  "SysplorerEmbeddedCoder.LogicAndBitOperation.CompareToConstant": [
+    "Operator",
+    "ConstValue",
+    "OutDataTypeStr",
+    "ZeroCross"
+  ],
+  "SysplorerEmbeddedCoder.LogicAndBitOperation.CompareToZero": [
+    "Operator",
+    "OutDataTypeStr",
+    "ZeroCross"
+  ],
+  "SysplorerEmbeddedCoder.LogicAndBitOperation.DetectChange": [
+    "InitialCondition",
+    "OutDataTypeStr"
+  ],
+  "SysplorerEmbeddedCoder.LogicAndBitOperation.DetectDecrease": [
+    "InitialCondition",
+    "OutDataTypeStr"
+  ],
+  "SysplorerEmbeddedCoder.LogicAndBitOperation.DetectFallNegative": [
+    "InitialCondition",
+    "OutDataTypeStr"
+  ],
+  "SysplorerEmbeddedCoder.LogicAndBitOperation.DetectFallNonpositive": [
+    "InitialCondition",
+    "OutDataTypeStr"
+  ],
+  "SysplorerEmbeddedCoder.LogicAndBitOperation.DetectIncrease": [
+    "InitialCondition",
+    "OutDataTypeStr"
+  ],
+  "SysplorerEmbeddedCoder.LogicAndBitOperation.DetectRiseNonnegative": [
+    "InitialCondition",
+    "OutDataTypeStr"
+  ],
+  "SysplorerEmbeddedCoder.LogicAndBitOperation.DetectRisePositive": [
+    "InitialCondition",
+    "OutDataTypeStr"
+  ],
+  "SysplorerEmbeddedCoder.LogicAndBitOperation.ExtractBits": [
+    "BitsToExtract",
+    "NumBits",
+    "BitIdxRange"
+  ],
+  "SysplorerEmbeddedCoder.LogicAndBitOperation.FloatExtractBits": [
+    "OutMode",
+    "Edit"
+  ],
+  "SysplorerEmbeddedCoder.LogicAndBitOperation.IntegerToBitConverter": [
+    "M",
+    "Symbol",
+    "Order",
+    "DataTypeHelper"
+  ],
+  "SysplorerEmbeddedCoder.LogicAndBitOperation.IntervalTest": [
+    "IntervalClosedRight",
+    "UpperLimit",
+    "IntervalClosedLeft",
+    "LowerLimit",
+    "OutDataTypeStr"
+  ],
+  "SysplorerEmbeddedCoder.LogicAndBitOperation.IntervalTestDynamic": [
+    "IntervalClosedRight",
+    "IntervalClosedLeft",
+    "OutDataTypeStr"
+  ],
+  "SysplorerEmbeddedCoder.LogicAndBitOperation.LogicalOperator": [
+    "Operator",
+    "NumInputPorts",
+    "OutDataTypeStr"
+  ],
+  "SysplorerEmbeddedCoder.LogicAndBitOperation.RelationalOperator": [
+    "Operator",
+    "ZeroCross",
+    "OutDataTypeStr"
+  ],
+  "SysplorerEmbeddedCoder.LogicAndBitOperation.ShiftArithmetic": [
+    "BitShiftNumberSource",
+    "BitShiftDirection",
+    "BitShiftNumber",
+    "DiagnosticForOORShift"
+  ],
+  "SysplorerEmbeddedCoder.LookupTable.LookupTable1D": [
+    "Table",
+    "BreakpointsForDimension1",
+    "InterpMethod",
+    "ExtrapMethod",
+    "IndexSearchMethod",
+    "TableMin",
+    "TableMax",
+    "BreakpointsForDimension1Min",
+    "BreakpointsForDimension1Max",
+    "OutDataTypeStr"
+  ],
+  "SysplorerEmbeddedCoder.LookupTable.LookupTable2D": [
+    "Table",
+    "BreakpointsForDimension1",
+    "BreakpointsForDimension2",
+    "InterpMethod",
+    "ExtrapMethod",
+    "TableMin",
+    "TableMax",
+    "BreakpointsForDimension1Min",
+    "BreakpointsForDimension1Max",
+    "BreakpointsForDimension2Min",
+    "BreakpointsForDimension2Max",
+    "OutDataType"
+  ],
+  "SysplorerEmbeddedCoder.LookupTable.LookupTableDynamic": [
+    "Combobox_0",
+    "DataTypeHelper"
+  ],
+  "SysplorerEmbeddedCoder.LookupTable.LookupTableND": [
+    "N",
+    "Table",
+    "Axis1",
+    "Axis2",
+    "Axis3",
+    "Axis4",
+    "Axis5",
+    "Axis6",
+    "Axis7",
+    "Axis8",
+    "Axis9",
+    "Axis10",
+    "Axis11",
+    "Axis12",
+    "Axis13",
+    "Axis14",
+    "Axis15",
+    "Axis16",
+    "Axis17",
+    "Axis18",
+    "Axis19",
+    "Axis20",
+    "Axis21",
+    "Axis22",
+    "Axis23",
+    "Axis24",
+    "Axis25",
+    "Axis26",
+    "Axis27",
+    "Axis28",
+    "Axis29",
+    "Axis30",
+    "InterpolationMethod",
+    "ExtrapolationMethod",
+    "IndexSearchMethod",
+    "TableType",
+    "TableMin",
+    "TableMax",
+    "Axis1Type",
+    "Axis1Min",
+    "Axis1Max",
+    "Axis2Type",
+    "Axis2Min",
+    "Axis2Max",
+    "Axis3Type",
+    "Axis3Min",
+    "Axis3Max",
+    "Axis4Type",
+    "Axis4Min",
+    "Axis4Max",
+    "Axis5Type",
+    "Axis5Min",
+    "Axis5Max",
+    "Axis6Type",
+    "Axis6Min",
+    "Axis6Max",
+    "Axis7Type",
+    "Axis7Min",
+    "Axis7Max",
+    "Axis8Type",
+    "Axis8Min",
+    "Axis8Max",
+    "Axis9Type",
+    "Axis9Min",
+    "Axis9Max",
+    "Axis10Type",
+    "Axis10Min",
+    "Axis10Max",
+    "Axis11Type",
+    "Axis11Min",
+    "Axis11Max",
+    "Axis12Type",
+    "Axis12Min",
+    "Axis12Max",
+    "Axis13Type",
+    "Axis13Min",
+    "Axis13Max",
+    "Axis14Type",
+    "Axis14Min",
+    "Axis14Max",
+    "Axis15Type",
+    "Axis15Min",
+    "Axis15Max",
+    "Axis16Type",
+    "Axis16Min",
+    "Axis16Max",
+    "Axis17Type",
+    "Axis17Min",
+    "Axis17Max",
+    "Axis18Type",
+    "Axis18Min",
+    "Axis18Max",
+    "Axis19Type",
+    "Axis19Min",
+    "Axis19Max",
+    "Axis20Type",
+    "Axis20Min",
+    "Axis20Max",
+    "Axis21Type",
+    "Axis21Min",
+    "Axis21Max",
+    "Axis22Type",
+    "Axis22Min",
+    "Axis22Max",
+    "Axis23Type",
+    "Axis23Min",
+    "Axis23Max",
+    "Axis24Type",
+    "Axis24Min",
+    "Axis24Max",
+    "Axis25Type",
+    "Axis25Min",
+    "Axis25Max",
+    "Axis26Type",
+    "Axis26Min",
+    "Axis26Max",
+    "Axis27Type",
+    "Axis27Min",
+    "Axis27Max",
+    "Axis28Type",
+    "Axis28Min",
+    "Axis28Max",
+    "Axis29Type",
+    "Axis29Min",
+    "Axis29Max",
+    "Axis30Type",
+    "Axis30Min",
+    "Axis30Max",
+    "FractionType",
+    "IntermediateResultsType",
+    "YType",
+    "YMin",
+    "YMax",
+    "InternRulePriority",
+    "RequireInputSameType"
+  ],
+  "SysplorerEmbeddedCoder.MathOperation.Abs": [
+    "OutMin",
+    "OutMax",
+    "OutDataTypeStr",
+    "RoundType",
+    "SaturateOnIntegerOverflow"
+  ],
+  "SysplorerEmbeddedCoder.MathOperation.Bias": [
+    "Bias"
+  ],
+  "SysplorerEmbeddedCoder.MathOperation.ComplexToMagnitudeAngle": [
+    "Output"
+  ],
+  "SysplorerEmbeddedCoder.MathOperation.ComplexToRealImag": [
+    "Output"
+  ],
+  "SysplorerEmbeddedCoder.MathOperation.FindNonzeroElements": [
+    "indexOutputType",
+    "inputDimenSize",
+    "indexMode",
+    "Checkbox",
+    "DataTypeHelper"
+  ],
+  "SysplorerEmbeddedCoder.MathOperation.Gain": [
+    "Gain",
+    "Multiplication",
+    "ParameterMin",
+    "ParameterMax",
+    "ParameterDataTypeStr",
+    "OutMin",
+    "OutMax",
+    "OutDataTypeStr",
+    "RndMeth"
+  ],
+  "SysplorerEmbeddedCoder.MathOperation.IsTriangular": [
+    "mode"
+  ],
+  "SysplorerEmbeddedCoder.MathOperation.MagnitudeAngleToComplex": [
+    "Input",
+    "Magnitude",
+    "Angle"
+  ],
+  "SysplorerEmbeddedCoder.MathOperation.MathFunction": [
+    "Operator"
+  ],
+  "SysplorerEmbeddedCoder.MathOperation.Matrix": [],
+  "SysplorerEmbeddedCoder.MathOperation.Maxmin": [
+    "Function",
+    "Inputs",
+    "ZeroCross",
+    "OutMin",
+    "OutMax",
+    "OutDataTypeStr",
+    "RoundType",
+    "SaturateOnIntegerOverflow"
+  ],
+  "SysplorerEmbeddedCoder.MathOperation.MinMaxRunningResettable": [
+    "maxMinType",
+    "initCondition"
+  ],
+  "SysplorerEmbeddedCoder.MathOperation.Polynomial": [
+    "coefs"
+  ],
+  "SysplorerEmbeddedCoder.MathOperation.Product": [
+    "Inputs",
+    "Multiplication",
+    "OutMin",
+    "OutMax",
+    "OutDataTypeStr",
+    "SaturateOnIntegerOverflow"
+  ],
+  "SysplorerEmbeddedCoder.MathOperation.Quaternion": [],
+  "SysplorerEmbeddedCoder.MathOperation.RMS": [
+    "inHandleType",
+    "Dim"
+  ],
+  "SysplorerEmbeddedCoder.MathOperation.RealImagToComplex": [
+    "Input",
+    "RealNumber",
+    "ImaginaryNumber"
+  ],
+  "SysplorerEmbeddedCoder.MathOperation.ReciprocalSqrt": [
+    "Function",
+    "OutMin",
+    "OutMax",
+    "OutDataTypeStr",
+    "RoundType",
+    "SaturateOnIntegerOverflow"
+  ],
+  "SysplorerEmbeddedCoder.MathOperation.Reshape": [
+    "OutputDimensionality",
+    "OutputDimensions"
+  ],
+  "SysplorerEmbeddedCoder.MathOperation.RoundingFunction": [
+    "Operator"
+  ],
+  "SysplorerEmbeddedCoder.MathOperation.Sign": [],
+  "SysplorerEmbeddedCoder.MathOperation.SignedSqrt": [
+    "Function",
+    "OutMin",
+    "OutMax",
+    "OutDataTypeStr",
+    "RoundType",
+    "SaturateOnIntegerOverflow"
+  ],
+  "SysplorerEmbeddedCoder.MathOperation.SineWaveFunction": [
+    "SineType",
+    "TimeSource",
+    "Amplitude",
+    "Bias",
+    "Frequency",
+    "Phase",
+    "Samples",
+    "Offset",
+    "SampleTime"
+  ],
+  "SysplorerEmbeddedCoder.MathOperation.Sqrt": [
+    "Function",
+    "OutMin",
+    "OutMax",
+    "OutDataTypeStr",
+    "RoundType",
+    "SaturateOnIntegerOverflow"
+  ],
+  "SysplorerEmbeddedCoder.MathOperation.Squeeze": [],
+  "SysplorerEmbeddedCoder.MathOperation.Sum": [
+    "Inputs",
+    "OutMin",
+    "OutMax",
+    "OutDataTypeStr",
+    "SaturateOnIntegerOverflow"
+  ],
+  "SysplorerEmbeddedCoder.MathOperation.TrigonometricFunction": [
+    "Operator"
+  ],
+  "SysplorerEmbeddedCoder.MathOperation.TypeConversion": [
+    "OutMin",
+    "OutMax",
+    "OutDataTypeStr",
+    "IsSaturate"
+  ],
+  "SysplorerEmbeddedCoder.MathOperation.UnaryMinus": [],
+  "SysplorerEmbeddedCoder.MathOperation.WeightedSampleTimeMath": [
+    "TsampMathOpt",
+    "WeightValue",
+    "OutDataType"
+  ],
+  "SysplorerEmbeddedCoder.MathOperation.dBGain": [
+    "dB",
+    "InputSignalType"
+  ],
+  "SysplorerEmbeddedCoder.ModelVerification.Assertion": [
+    "allowAssertion",
+    "errMsgSource",
+    "errMsg",
+    "stopSimulation",
+    "sampleTime"
+  ],
+  "SysplorerEmbeddedCoder.Port.Inport": [
+    "OutMin",
+    "OutMax",
+    "OutDataTypeStr",
+    "Dimension",
+    "SampleTime",
+    "InputPartition",
+    "PartitionDimension",
+    "PartitionWidth",
+    "PartitionOffset"
+  ],
+  "SysplorerEmbeddedCoder.Port.Outport": [
+    "OutMin",
+    "OutMax",
+    "OutDataTypeStr",
+    "Dimension",
+    "SampleTime",
+    "OutputConcatenationDimension"
+  ],
+  "SysplorerEmbeddedCoder.SignalAttributes.DownSample": [
+    "SampleFactor",
+    "SampleOffset",
+    "InputProcessing",
+    "RateOptions",
+    "initialCondition"
+  ],
+  "SysplorerEmbeddedCoder.SignalAttributes.RateTransition": [
+    "initialCondition",
+    "outPortSampleTimeOpt",
+    "outPortSampleTime",
+    "outPortSampleTimeMultiple"
+  ],
+  "SysplorerEmbeddedCoder.SignalAttributes.WeightedSampleTime": [
+    "TsampMathOpt",
+    "WeightValue",
+    "OutDataType"
+  ],
+  "SysplorerEmbeddedCoder.SignalAttributes.Width": [
+    "outPortDataTypeOpt",
+    "OutDataType"
+  ],
+  "SysplorerEmbeddedCoder.SignalRouting.BusCreator": [
+    "InputsNum",
+    "OutDataTypeStr",
+    "ShowSignalNames"
+  ],
+  "SysplorerEmbeddedCoder.SignalRouting.BusSelector": [
+    "OutPutSignals",
+    "OutputAsBus"
+  ],
+  "SysplorerEmbeddedCoder.SignalRouting.BusToVector": [],
+  "SysplorerEmbeddedCoder.SignalRouting.DataStoreMemory": [
+    "DataStoreName",
+    "InitialValue",
+    "OutDataTypeStr",
+    "Dimensions"
+  ],
+  "SysplorerEmbeddedCoder.SignalRouting.DataStoreRead": [
+    "DataStoreName"
+  ],
+  "SysplorerEmbeddedCoder.SignalRouting.DataStoreWrite": [
+    "DataStoreName"
+  ],
+  "SysplorerEmbeddedCoder.SignalRouting.DeMux": [
+    "Outputs"
+  ],
+  "SysplorerEmbeddedCoder.SignalRouting.From": [
+    "GotoTag"
+  ],
+  "SysplorerEmbeddedCoder.SignalRouting.Goto": [
+    "GotoTag",
+    "TagVisibility"
+  ],
+  "SysplorerEmbeddedCoder.SignalRouting.GotoTagVisibility": [
+    "GotoTag"
+  ],
+  "SysplorerEmbeddedCoder.SignalRouting.ManualSwitch": [
+    "Checkbox"
+  ],
+  "SysplorerEmbeddedCoder.SignalRouting.MultiportSwitch": [
+    "DataPortOrder",
+    "Inputs",
+    "DataPortIndices",
+    "DataPortForDefault",
+    "OutDataTypeStr",
+    "AllowDiffInputSizes"
+  ],
+  "SysplorerEmbeddedCoder.SignalRouting.Mux": [
+    "Inputs"
+  ],
+  "SysplorerEmbeddedCoder.SignalRouting.Selector": [
+    "IndexMode",
+    "InputPortWidth",
+    "NumberOfDimensions",
+    "IndexOptions",
+    "Indices",
+    "OutputSizes"
+  ],
+  "SysplorerEmbeddedCoder.SignalRouting.Switch": [
+    "Criteria",
+    "Threshold",
+    "ZeroCross",
+    "OutMin",
+    "OutMax",
+    "OutDataTypeStr",
+    "AllowDiffInputSizes"
+  ],
+  "SysplorerEmbeddedCoder.SignalRouting.VectorConcatenate": [
+    "NumInputs",
+    "Mode",
+    "ConcatenateDimension"
+  ],
+  "SysplorerEmbeddedCoder.Sinks.AveragingPowerSpectralDensity": [
+    "npts",
+    "fftpts",
+    "HowOften",
+    "sampleT"
+  ],
+  "SysplorerEmbeddedCoder.Sinks.PowerSpectralDensity": [
+    "npts",
+    "fftpts",
+    "HowOften",
+    "sampleT"
+  ],
+  "SysplorerEmbeddedCoder.Sources.BandLimitedWhiteNoise": [
+    "Cov",
+    "Ts",
+    "Seed"
+  ],
+  "SysplorerEmbeddedCoder.Sources.BernoulliBinaryGenerator": [
+    "ProbabilityOfZero",
+    "SeedSource",
+    "Seed",
+    "SampleTime",
+    "SamplesPerFrame",
+    "OutDataType"
+  ],
+  "SysplorerEmbeddedCoder.Sources.ChirpSignal": [
+    "f1",
+    "T",
+    "f2"
+  ],
+  "SysplorerEmbeddedCoder.Sources.Clock": [],
+  "SysplorerEmbeddedCoder.Sources.Constant": [
+    "Value",
+    "SampleTime",
+    "OutMin",
+    "OutMax",
+    "OutDataTypeStr"
+  ],
+  "SysplorerEmbeddedCoder.Sources.CounterFreeRunning": [
+    "numBits",
+    "SampleTime"
+  ],
+  "SysplorerEmbeddedCoder.Sources.CounterLimited": [
+    "upLimit",
+    "SampleTime"
+  ],
+  "SysplorerEmbeddedCoder.Sources.DigitalClock": [
+    "SampleTime"
+  ],
+  "SysplorerEmbeddedCoder.Sources.DiscretePulseGenerator": [
+    "PulseType",
+    "TimeSource",
+    "Amplitude",
+    "Period_time",
+    "Width_time",
+    "Phase_time",
+    "Period_Sample",
+    "Width_sample",
+    "Phase_sample",
+    "Sample_Time"
+  ],
+  "SysplorerEmbeddedCoder.Sources.FromFile": [
+    "FileName",
+    "SampleTime",
+    "Dimensions"
+  ],
+  "SysplorerEmbeddedCoder.Sources.FromWorkspace": [
+    "VariableName",
+    "SampleTime",
+    "Dimensions"
+  ],
+  "SysplorerEmbeddedCoder.Sources.Ground": [],
+  "SysplorerEmbeddedCoder.Sources.PoissonIntegerGenerator": [
+    "Lambda",
+    "SeedSource",
+    "Seed",
+    "SampleTime",
+    "SamplesPerFrame",
+    "OutDataType"
+  ],
+  "SysplorerEmbeddedCoder.Sources.PulseGenerator": [
+    "PulseType",
+    "TimeSource",
+    "Amplitude",
+    "Period_time",
+    "Width_time",
+    "Phase_time",
+    "Period_Sample",
+    "Width_sample",
+    "Phase_sample",
+    "Sample_Time"
+  ],
+  "SysplorerEmbeddedCoder.Sources.Ramp": [
+    "Slope",
+    "Start",
+    "InitialOutput"
+  ],
+  "SysplorerEmbeddedCoder.Sources.RandomIntegerGenerator": [
+    "SetSize",
+    "SeedSource",
+    "Seed",
+    "SampleTime",
+    "SamplesPerFrame",
+    "OutDataType"
+  ],
+  "SysplorerEmbeddedCoder.Sources.RandomNumber": [
+    "Mean",
+    "Variance",
+    "seed",
+    "Sample_Time"
+  ],
+  "SysplorerEmbeddedCoder.Sources.RepeatingSequence": [
+    "TimeEdit",
+    "ValueEdit"
+  ],
+  "SysplorerEmbeddedCoder.Sources.RepeatingSequenceInterpolated": [
+    "outValues",
+    "timeValues",
+    "Combobox",
+    "sampleTime",
+    "OutDataTypeStr"
+  ],
+  "SysplorerEmbeddedCoder.Sources.RepeatingSequenceStair": [
+    "OutValues",
+    "SampleTime",
+    "OutDataTypeStr"
+  ],
+  "SysplorerEmbeddedCoder.Sources.SignalBuilder": [],
+  "SysplorerEmbeddedCoder.Sources.SineWave": [
+    "SineType",
+    "TimeSource",
+    "Amplitude",
+    "Bias",
+    "Frequency",
+    "Phase",
+    "Samples",
+    "Offset",
+    "SampleTime"
+  ],
+  "SysplorerEmbeddedCoder.Sources.Step": [
+    "Time",
+    "Before",
+    "After",
+    "SampleTime",
+    "OutDataTypeStr"
+  ],
+  "SysplorerEmbeddedCoder.Sources.UniformRandomNumber": [
+    "minimum",
+    "maximum",
+    "seed",
+    "Sample_Time"
+  ],
+  "SysplorerEmbeddedCoder.StateMachine.Chart": [],
+  "SysplorerEmbeddedCoder.StateMachine.DefaultTransition": [],
+  "SysplorerEmbeddedCoder.StateMachine.GraphFunction": [],
+  "SysplorerEmbeddedCoder.StateMachine.HistoryJunction": [],
+  "SysplorerEmbeddedCoder.StateMachine.Junction": [],
+  "SysplorerEmbeddedCoder.StateMachine.State": [],
+  "SysplorerEmbeddedCoder.StateMachine.TruthTable": [],
+  "SysplorerEmbeddedCoder.SubSystems.ActionPort": [],
+  "SysplorerEmbeddedCoder.SubSystems.Enable": [],
+  "SysplorerEmbeddedCoder.SubSystems.ForEach": [],
+  "SysplorerEmbeddedCoder.SubSystems.ForIterator": [
+    "status",
+    "iterLimitSource",
+    "maxIterNum",
+    "iterUpdate",
+    "displayIterOutPort",
+    "initialIndex",
+    "y"
+  ],
+  "SysplorerEmbeddedCoder.SubSystems.FunctionCallGenerator": [
+    "SampleTime",
+    "NumberOfIterations",
+    "ShowEnablePort"
+  ],
+  "SysplorerEmbeddedCoder.SubSystems.If": [
+    "InputNum",
+    "IfExpression",
+    "ElseifExpression",
+    "ShowElsePort",
+    "ZeroCross"
+  ],
+  "SysplorerEmbeddedCoder.SubSystems.SampleAndHold": [
+    "TriggerType"
+  ],
+  "SysplorerEmbeddedCoder.SubSystems.SubSystem": [
+    "ShowPortLabels",
+    "TreatAsAtomicUnit",
+    "SystemSampleTime",
+    "FunctionPackType",
+    "FunctionName",
+    "FunctionFile"
+  ],
+  "SysplorerEmbeddedCoder.SubSystems.SwitchCase": [
+    "CaseCondition",
+    "ShowDefaultCase",
+    "ZeroCross"
+  ],
+  "SysplorerEmbeddedCoder.SubSystems.Trigger": [],
+  "SysplorerEmbeddedCoder.SubSystems.WhileIterator": [],
+  "SysplorerEmbeddedCoder.Utilities.BytePack": [
+    "inputDataType",
+    "byteAlignment"
+  ],
+  "SysplorerEmbeddedCoder.Utilities.ByteUnpack": [
+    "outportDimension",
+    "outportType",
+    "byteAlignment"
+  ],
+  "SysplorerEmbeddedCoder.Utilities.CANPack": [],
+  "SysplorerEmbeddedCoder.Utilities.CANUnpack": [],
+  "SysplorerEmbeddedCoder.Utilities.CCaller": [],
+  "SysplorerEmbeddedCoder.Utilities.CFunction": [],
+  "SysplorerEmbeddedCoder.Utilities.Counter": [
+    "Direction",
+    "CountEvent",
+    "CounterSize",
+    "MaxCount",
+    "InitialCount",
+    "Output",
+    "HitValue",
+    "ResetInput",
+    "SamplesPerFrame",
+    "SampleTime",
+    "CntDtype"
+  ],
+  "SysplorerEmbeddedCoder.Utilities.Display": [
+    "Format"
+  ],
+  "SysplorerEmbeddedCoder.Utilities.ExternalInport": [
+    "OutDataTypeStr",
+    "Dimension",
+    "Name"
+  ],
+  "SysplorerEmbeddedCoder.Utilities.ExternalOutport": [
+    "OutDataTypeStr",
+    "Dimension",
+    "Name"
+  ],
+  "SysplorerEmbeddedCoder.Utilities.Fcn": [
+    "ExprEdit"
+  ],
+  "SysplorerEmbeddedCoder.Utilities.JuliaFunction": [],
+  "SysplorerEmbeddedCoder.Utilities.JuliaObject": [],
+  "SysplorerEmbeddedCoder.Utilities.Merge": [
+    "Inputs",
+    "InitialOutput"
+  ],
+  "SysplorerEmbeddedCoder.Utilities.Scope": [
+    "ShowOnSimulator",
+    "InputsNum",
+    "DisplayFormat"
+  ],
+  "SysplorerEmbeddedCoder.Utilities.StopSimulation": [],
+  "SysplorerEmbeddedCoder.Utilities.Terminator": [],
+  "SysplorerEmbeddedCoder.Utilities.ToFile": [
+    "FileName",
+    "VariableName",
+    "SampleTime",
+    "Decimation"
+  ],
+  "SysplorerEmbeddedCoder.Utilities.ToWorkspace": [
+    "VariableName",
+    "SampleTime",
+    "Decimation"
+  ]
+}

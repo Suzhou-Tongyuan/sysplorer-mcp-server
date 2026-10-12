@@ -1,0 +1,9 @@
+{
+  "英文名": "ta-vehicle-modeling",
+  "中文名": "TA 车辆库建模",
+  "版本号": "1.1.3",
+  "中文功能定位": "在已应用 ty-sysplorer-modeling-rules 之后，于 TA 六库范围内执行整车与车辆子系统模型的新建、修复、布局注解整理、仿真调试、结果核验与交付整理。若提示词中未出现 TAEconomy、TADynamics、TAThermalSystem、TAEngine、TABattery、TAElectronic 之一，且未明确要求使用 TA 车辆库完成相关车辆建模任务，禁止触发或使用本 skill。",
+  "英文功能定位": "After ty-sysplorer-modeling-rules has been applied, build, repair, maintain source-level layout annotations, debug simulations, validate results, and package whole-vehicle and vehicle-subsystem models within the six TA vehicle libraries. Do not trigger or use this skill if the prompt does not mention one of TAEconomy, TADynamics, TAThermalSystem, TAEngine, TABattery, or TAElectronic and does not explicitly require TA vehicle libraries for related vehicle modeling tasks.",
+  "中文分类": "Sysplorer 物理模型建模与调试",
+  "英文分类": "Sysplorer Physical Modeling & Debugging"
+}

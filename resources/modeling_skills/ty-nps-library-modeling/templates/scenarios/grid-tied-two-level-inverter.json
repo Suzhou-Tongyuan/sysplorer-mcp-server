@@ -1,0 +1,47 @@
+{
+    "id":  "grid-tied-two-level-inverter",
+    "system_type":  "grid-tied two-level inverter",
+    "modeling_objective":  "Build a minimum DC bus to grid closed loop and verify grid current control, PLL locking, and PCC behavior.",
+    "main_power_path":  [
+                            "DC source or DC bus",
+                            "two-level converter bridge",
+                            "filter",
+                            "point of common coupling",
+                            "grid"
+                        ],
+    "control_path":  [
+                         "PLL",
+                         "current controller",
+                         "modulation or PWM"
+                     ],
+    "mandatory_support_blocks":  [
+                                     "Powergui",
+                                     "ground or reference",
+                                     "voltage measurement",
+                                     "current measurement",
+                                     "P/Q measurement"
+                                 ],
+    "required_parameters":  [
+                                "DC bus voltage",
+                                "grid line voltage or phase voltage",
+                                "grid frequency",
+                                "switching frequency",
+                                "filter parameters",
+                                "sampling period",
+                                "control period"
+                            ],
+    "key_results":  [
+                        "grid current",
+                        "PCC voltage",
+                        "DC bus voltage",
+                        "PLL angle",
+                        "active power",
+                        "reactive power"
+                    ],
+    "simulation_baseline":  {
+                                "solver_requirement":  "Algorithm=InlineImplicitEuler",
+                                "annotation_requirement":  "experiment(Algorithm=InlineImplicitEuler, InlineIntegrator=true, InlineStepSize=false, Interval=<step>, StartTime=0, StopTime=2, Tolerance=0.0001, IntegratorStep=<step>, StoreEventValue=0)",
+                                "default_step":  "5e-5",
+                                "step_rule":  "choose <step> from PWM frequency, fastest physical sampling step, or control period; keep Interval and IntegratorStep equal; use step <= fastest relevant period / 10 when no stronger rule exists"
+                            }
+}

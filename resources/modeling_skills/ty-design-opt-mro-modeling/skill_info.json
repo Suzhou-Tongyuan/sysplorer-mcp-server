@@ -1,0 +1,9 @@
+{
+  "name": "ty-design-opt-mro-modeling",
+  "display_name": "DesignOptMro 响应优化",
+  "version": "1.1.0",
+  "description": "指导 Sysplorer DesignOptMro 响应优化 Python API 的使用，包括调节参数、固定参数、需求、变量集、算法配置、评估优化和结果读取。",
+  "description_en": "Guide Sysplorer DesignOptMro response optimization Python API usage, including tuner/fixed parameters, requirements, variable sets, algorithm options, evaluation, optimization, and result extraction.",
+  "category": "设计优化 / 响应优化",
+  "category_en": "Design Optimization / Response Optimization"
+}

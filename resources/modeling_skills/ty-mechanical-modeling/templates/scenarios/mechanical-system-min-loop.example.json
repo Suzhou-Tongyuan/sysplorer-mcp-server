@@ -1,0 +1,32 @@
+{
+  "task_type": "build-from-scenario",
+  "scenario_id": "mechanical-system-min-loop",
+  "dimension": "1d|2d|3d",
+  "target_system": "replace-with-target-system",
+  "preferred_ty_libraries": [
+    "TYMechanics"
+  ],
+  "core_functions": [
+    "replace-with-core-function"
+  ],
+  "boundary_conditions": [
+    "replace-with-boundary-condition"
+  ],
+  "required_interfaces": [
+    "replace-with-input-output-interface"
+  ],
+  "required_parameters": [
+    {
+      "name": "replace-with-parameter-name",
+      "required": true,
+      "source": "user-input|existing-model|template-default"
+    }
+  ],
+  "key_results": [
+    {
+      "name": "replace-with-result-variable",
+      "criterion": "replace-with-acceptance-criterion"
+    }
+  ],
+  "notes": "Start from the minimum closed loop that can pass check and translation."
+}

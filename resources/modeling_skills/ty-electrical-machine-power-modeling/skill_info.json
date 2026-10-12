@@ -1,0 +1,9 @@
+{
+  "英文名": "ty-electrical-machine-power-modeling",
+  "中文名": "TY 电气、电机与电力系统建模",
+  "版本号": "0.2.0",
+  "中文功能定位": "在已应用 ty-sysplorer-modeling-rules 之后，于 TYMotor、TYElectricPower、TYElectrical 及最小 Modelica 胶水库范围内执行电机、电力系统与基础电气模型的新建、修复、验证、对标与交付；涵盖平均值逆变器、PMSM DTC、输电暂态、配电馈线、发电机、变压器、线路、断路器、母线、静态负载、传感器、接地及官方 TY 电气示例，并强制执行 reload/check/translate/simulate/inspect 验证。",
+  "英文功能定位": "After ty-sysplorer-modeling-rules has been applied, build, repair, validate, benchmark, and deliver electrical-machine, power-system, and foundational electrical models within TYMotor, TYElectricPower, TYElectrical, and minimal Modelica glue; covers average-value inverters, PMSM DTC, transmission transients, distribution feeders, generators, transformers, lines, breakers, buses, static loads, sensors, grounding, and official TY electrical examples, with mandatory reload/check/translate/simulate/inspect validation.",
+  "中文分类": "Sysplorer 物理模型建模与调试",
+  "英文分类": "Sysplorer Physical Modeling & Debugging"
+}

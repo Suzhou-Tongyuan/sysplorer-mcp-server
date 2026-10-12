@@ -1,0 +1,9 @@
+{
+  "name": "ty-design-opt-psa-modeling",
+  "display_name": "DesignOptPsa 敏感度分析",
+  "version": "1.0.0",
+  "description": "指导 Sysplorer DesignOptPsa 敏感度分析 Python API 的使用，包括参数集、采样、需求、评估、量化分析和结果读取。",
+  "description_en": "Guide Sysplorer DesignOptPsa sensitivity analysis Python API usage, including parameter sets, sampling, requirements, evaluation, quantified analysis, and result extraction.",
+  "category": "设计优化 / 敏感度分析",
+  "category_en": "Design Optimization / Sensitivity Analysis"
+}

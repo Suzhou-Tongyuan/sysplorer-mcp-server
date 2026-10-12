@@ -1,0 +1,9 @@
+{
+  "英文名": "ty-energy-modeling",
+  "中文名": "TY 能源系统建模",
+  "版本号": "1.1.1",
+  "中文功能定位": "在已应用 ty-sysplorer-modeling-rules 之后，于 Sysplorer 的 TY 光伏发电库、风力发电库、电池库、综合能源系统库以及 Modelica 4.0.0.TY.1 范围内执行能源系统模型的新建、修复、验证、翻译、仿真与结果复核。用户明确要求商业能源库，或父规则/有效上下文已选相关 TY 组件时使用；标准库满足则使用标准库，不足则组合补足。本库范围只约束能源子系统，不排除父级已选支持域组件；按请求验证。",
+  "英文功能定位": "After ty-sysplorer-modeling-rules has been applied, build, repair, validate, translate, simulate, and review energy-system models within Sysplorer using the TY photovoltaic, wind, battery, integrated-energy libraries, and Modelica 4.0.0.TY.1. Use when the user or parent context has selected these TY energy components; preserve sufficient standard components and the parent project library set. This whitelist applies only to the energy subsystem, with validation depth inherited from the request.",
+  "中文分类": "Sysplorer 能源系统建模与调试",
+  "英文分类": "Sysplorer Energy-System Modeling & Debugging"
+}

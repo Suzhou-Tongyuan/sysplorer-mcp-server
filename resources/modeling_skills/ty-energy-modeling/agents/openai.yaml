@@ -1,0 +1,4 @@
+interface:
+  display_name: "TY Energy Modeling"
+  short_description: "TY library scoped Sysplorer energy modeling"
+  default_prompt: "Use $ty-energy-modeling when the user or ty-sysplorer-modeling-rules has selected TY photovoltaic, wind, battery, or integrated-energy components. Preserve sufficient standard components, apply the library boundary only to the energy subsystem, and use Modelica 4.0.0.TY.1 for this commercial path. Stop at the requested validation stage; concrete existing failures remain under the independent debugging entry."
